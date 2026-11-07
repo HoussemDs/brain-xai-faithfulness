@@ -24,13 +24,23 @@ __pycache__/
 .ipynb_checkpoints/
 *.zip
 *.pdf
+# LaTeX build artifacts
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.bbl
+paper/*.blg
+paper/*.toc
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.synctex.gz
 weights/
 
 # Large Kaggle run output (12GB; per-subject maps go to Zenodo, not git)
 kaggle_output_prenatal_xai_96/
 
 # Keep the compiled manuscript (our own work); original_paper.pdf stays ignored by *.pdf above
-!paper/main.pdf
+!paper/trustworthy_xai_pediatric_sfcn.pdf
 
 # Working backups / scratch notebooks (not for publication)
 *.sexbak

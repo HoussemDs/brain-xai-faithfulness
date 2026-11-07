@@ -1,62 +1,98 @@
-# Explanation checks for a pediatric SFCN on public Calgary preschool MRI
+# Which explanations can we trust? A faithfulness audit of a frozen pediatric SFCN
 
-A public-data follow-up to Das, Duarte, Lebel and Bento (2024), *Deep learning for detecting prenatal alcohol exposure in pediatric brain MRI* (Front. Comput. Neurosci. 18:1434421, doi:10.3389/fncom.2024.1434421).
+![Data](https://img.shields.io/badge/data-CC--BY%204.0%20(OSF%205kz2p)-blue)
+![Run](https://img.shields.io/badge/full%20run-complete%20(96%20children)-success)
+![Methods](https://img.shields.io/badge/attribution%20methods-9-informational)
+![Design](https://img.shields.io/badge/protocol-pre--registered%20(OSF%20jycnr)-9cf)
 
-The public data has controls only, so this project does not detect alcohol exposure. It uses age group (age dichotomized at the cohort median, older vs younger) as a proxy task on a frozen pretrained SFCN to test whether common explanation methods are faithful, agree with each other, and give region-level claims that survive correction. Age is used because the frozen SFCN is a brain-age model, so age is the signal its features encode (a sex proxy was tested first and decoded at chance; see decision D11 in the plan). The protocol is in [prenatal_xai_plan.md](docs/prenatal_xai_plan.md).
+A pre-registered, public-data validation of **nine saliency/attribution methods** on a frozen
+pretrained **SFCN** brain-age network. The question is not *where does the model look* but a
+harder one that is almost never asked before a map is believed: **is the explanation faithful
+to the model, consistent across methods, and anatomically valid under a corrected test?**
 
-## Status
+Follow-up to Das, Duarte, Lebel & Bento (2024), *Deep learning for detecting prenatal alcohol
+exposure in pediatric brain MRI* (Front. Comput. Neurosci. 18:1434421). The public data are
+**controls only**, so this project makes **no claim about alcohol exposure**; it uses an
+age-group proxy (the signal the frozen brain-age features actually encode) to audit the
+explanation methods on the exact backbone, on data anyone can download.
 
-- **Full run complete.** Classifier and all nine attribution methods ran on Kaggle (GPU T4 x2) over the full cohort of 96 children. Results and figures: [REPORT.md](results/REPORT.md).
-- Headline: occlusion-based ReX (M9) is the most faithful method and early-block Grad-CAM (M2) the least; eight of nine methods pass the randomized-weight sanity check but Integrated Gradients (M4) fails it (input-driven, r = 0.73); 15 cortical regions survive BH-FDR q = 0.05; proxy-task accuracy 0.64. The deliverable is the method verdict, not the accuracy.
-- Cohort: 96 children, one scan each (decision D1). All 96 volumes are preprocessed (160 x 192 x 160, finite) and all 96 feature vectors (96 x 9600) are in `prep_output/`.
-- All 96 mid-sagittal slices were checked by eye (`results/figures/05_qc_contact_sheet.png`) and passed visual quality control. Every scan in the cohort is included in the analysis.
-- Weights: `weights/sfcn_brainage.p` is the UK Biobank brain-age SFCN from github.com/ha-ha-ha-han/UKBiobank_deep_pretrain. It is gitignored.
+**Paper:** [`paper/trustworthy_xai_pediatric_sfcn.pdf`](paper/trustworthy_xai_pediatric_sfcn.pdf)
+ · **Full results:** [`results/REPORT.md`](results/REPORT.md) · **Protocol:** [`docs/prenatal_xai_plan.md`](docs/prenatal_xai_plan.md)
+
+---
+
+![Nine attribution methods on one scan](results/figures/15_methods_example.png)
+*The same scan, nine methods. They disagree sharply on which regions matter — which is exactly
+why a validation step is needed before any map is read anatomically.*
+
+## Key results — the method verdict
+
+| Question | Verdict |
+|---|---|
+| **Faithful?** (do the flagged voxels drive the output) | Occlusion-based **ReX is the most faithful** (deletion AUC **0.14**); early-block Grad-CAM the least (**0.78**) — a **5× spread** across methods. |
+| **Model-driven, not input-driven?** | 8 of 9 pass a randomized-weight sanity check; **Integrated Gradients fails** (Spearman **r = 0.73** between trained and random model). |
+| **Consistent across methods?** | Weak: mean pairwise region-level Spearman **0.36**; the two Grad-CAM variants are anti-correlated. |
+| **Anatomically valid?** | 15 cortical regions survive FDR under an exploratory zero-fill (**post-hoc**); **none** under the pre-specified mean-intensity fill. |
+
+The deliverable is the **method verdict and a reusable protocol**, not a diagnostic classifier.
+The proxy head is intentionally modest (~64% CV accuracy) — accuracy is not the point.
+
+<p align="center">
+  <img src="results/figures/08_faithfulness.png" width="48%" alt="Faithfulness: deletion/insertion AUC">
+  <img src="results/figures/09_sanity.png" width="48%" alt="Randomized-weight sanity check">
+</p>
+
+*Left: deletion/insertion AUC — ReX (M9) is in its own band. Right: trained-vs-random
+similarity — Integrated Gradients (M4) stays correlated even when the whole network is
+reinitialized, so its map is input-driven.*
+
+## What makes this a clean test
+
+- **Pre-registered protocol** (OSF `jycnr`): six hypotheses and a decision log fixed before the run; post-hoc analyses are labelled as such.
+- **One scan per child** (`n = 96`), child-grouped cross-validation — **no child-level leakage** from repeated/longitudinal scans.
+- **Native-space design:** the frozen SFCN is kept in its pretraining space (UK Biobank/MNI152), so the transfer-learned features stay valid rather than being warped onto a pediatric template.
+- **Nine methods, multiple criteria:** faithfulness, randomized-weight sanity, resolution, cross-method agreement, and a multiple-comparison-corrected region-masking test.
+- **Fully public and reproducible:** public cohort, released code, pre-specified plan, and the complete per-region p-value log.
 
 ## Data
 
-- Source: OSF fork `5kz2p`, CC-BY 4.0. The original project `axz5r` is public but its storage is empty.
-- Layout: `T1_Dataset/<PreschoolID>/<session>/<scan>.nii.gz`. Labels (age, sex) are in sheet `All_Datasets` of `Calgary_Preschool_Dataset_Updated_*.xlsx`. Sex is coded Female = 0, Male = 1.
-- Current cohort: 96 unique children, one scan each (50 male, 46 female; age 3.84 +/- 0.83 years, range 2.58 to 6.90). See `data/manifest.csv` and `results/table1_cohort.csv`.
-
-## Cohort assembly and deviations from the paper
-
-1. **The cohort is assembled in two loader passes.** The spreadsheets hyphenate some scan IDs differently: the labels sheet writes `PS1064-1`, the T1 sheet writes `PS1064-10-1`, and the file on disk is `PS1064101.nii.gz`. The first pass (`code/fetch_osf_scans.py`) matches the IDs that line up directly; the second pass (`code/fetch_extra_scans.py`) joins on the T1-sheet ID with hyphens removed and recovers the remaining 11 children. Together they give the full cohort of 96: every child on the fork with a sex label and a usable T1.
-2. **Sample size (reconciled).** The T1 sheet lists 279 scans, but these belong to only 96 unique children (repeat/longitudinal visits). Of the 126 children with a sex label, exactly those 96 have at least one T1 scan. This study uses one scan per child, so the cohort is 96: every labelled child who has a T1 scan. The paper's "279 controls" counts scans, not children; using one scan per child avoids child-level leakage from repeated scans (see the explanation-grid and leakage questions in the plan).
-3. **Preprocessing differs from the paper, by design.** Skull stripping uses antspynet (a modern deep-learning extractor) instead of the paper's FSL-BET + SynthStrip; both are comparable, and this keeps one Python toolchain. Bias correction is N4 in both. The meaningful difference is the registration target: the paper registered to a pediatric atlas, while this study registers (affine) to 1 mm MNI152 and crops to 160 x 192 x 160, the space the frozen SFCN was pretrained in (UK Biobank, Peng/Gong et al. 2021), so the transfer-learned features stay valid. The cost is more preschool-to-adult warping, visible as the bimodal mask fraction in `results/preprocessing.md`.
-4. **Kaggle paths.** The notebook reads `/kaggle/input` and writes `/kaggle/working`. Local runs use `./work`. The Kaggle input dataset must contain all 96 scans and `manifest.csv`.
-5. **Head.** The planned head is an age-group classifier (older vs younger, age split at the cohort median) with 2 outputs. The paper's head used alcohol-exposure labels, which are not public. Sex was the original proxy but decoded at chance from the frozen brain-age features, so age is used instead (plan decision D11).
+- **Source:** Calgary Preschool MRI Dataset, OSF project `axz5r`, **fork `5kz2p`** (CC-BY 4.0). `5kz2p` is the **dataset** fork (not the model). The original project storage is empty; the fork holds the usable scans.
+- **Cohort:** 96 unique children, one T1 each (50 male, 46 female; age 3.84 ± 0.83 y, range 2.58–6.90). See `data/manifest.csv` and `results/table1_cohort.csv`.
+- **Model weights (separate):** `weights/sfcn_brainage.p`, the UK Biobank brain-age SFCN from [github.com/ha-ha-ha-han/UKBiobank_deep_pretrain](https://github.com/ha-ha-ha-han/UKBiobank_deep_pretrain). Gitignored.
+- The T1 sheet lists 279 scans, but these are repeat visits of the same 96 children; we take **one scan per child**, so the cohort is child-level, not scan-level.
 
 ## Repository layout
 
 | Path | Contents |
 |---|---|
+| `paper/` | Manuscript (`.tex`, `.pdf`), figures, and `references.bib` |
 | `docs/prenatal_xai_plan.md` | Pre-specified protocol and decision log |
-| `notebooks/prenatal_xai_prep.ipynb` | Preprocessing notebook. Download, preprocessing, frozen SFCN feature extraction. |
-| `code/fetch_osf_scans.py` | First loader pass. Fetches the labelled T1 scans whose IDs match directly and writes the manifest |
-| `code/fetch_extra_scans.py` | Second loader pass. Recovers the 11 children whose T1-sheet IDs use different hyphenation, completing the cohort at 96 |
-| `code/make_prep_figures.py` | Preprocessing QC figures into `results/figures/` |
-| `code/sfcn.py` | SFCN architecture and feature-extractor loader (used by the attribution code) |
-| `code/run_all_methods.py` | Attribution methods M1 to M9 |
-| `code/rex_3d.py` | M9, 3D ReX occlusion responsibility on the 5 x 6 x 5 grid |
-| `code/eval_metrics.py` | Faithfulness, sanity check, bootstrap CIs, permutation tests, Benjamini-Hochberg |
-| `data/manifest.csv` | Scan manifest (metadata only) |
-| `results/` | Cohort table, preprocessing report, QC figures |
-| `weights/` | SFCN checkpoint (gitignored) |
+| `notebooks/prenatal_xai_prep.ipynb` | Preprocessing: download, registration, frozen SFCN feature extraction |
+| `notebooks/prenatal_xai_kaggle.ipynb` | Main analysis: classifier + nine attribution methods + metrics |
+| `code/sfcn.py` | SFCN architecture + frozen feature-extractor loader |
+| `code/run_all_methods.py` | Attribution methods M1–M9 |
+| `code/rex_3d.py` | M9: 3D ReX occlusion-responsibility on the 5×6×5 grid |
+| `code/eval_metrics.py` | Faithfulness, sanity check, bootstrap CIs, permutation, Benjamini–Hochberg |
+| `code/fetch_osf_scans.py`, `fetch_extra_scans.py` | Two-pass cohort loader (handles the ID-hyphenation mismatch) |
+| `results/` | REPORT, figures, cohort table, full per-region p-value log |
 
-Not committed (see `.gitignore`): `full_ds/` (raw scans and spreadsheet), `upload/`, `prep_output/`, `weights/`, and archives.
+Not committed (`.gitignore`): `full_ds/`, `upload/`, `prep_output/`, `weights/`, archives.
 
-## Reproducing the preprocessing
+## Reproducing
 
-1. Download the labelled scans: `python code/fetch_osf_scans.py ./full_ds`
-2. Second pass to complete the cohort: `python code/fetch_extra_scans.py` (run from the project root)
-3. Run `notebooks/prenatal_xai_prep.ipynb` on Kaggle with all 96 scans attached as a dataset, or locally in `./work`. Check the printed line `preprocessed N/M | failures: K`.
-4. Copy `prep_output/` back to this project.
+**Preprocessing**
+1. `python code/fetch_osf_scans.py ./full_ds` — fetch the labelled scans
+2. `python code/fetch_extra_scans.py` — second pass, recovers 11 children with different ID hyphenation (cohort → 96)
+3. Run `notebooks/prenatal_xai_prep.ipynb` (Kaggle with all 96 scans attached, or locally in `./work`); check `preprocessed N/M | failures: K`
+4. Copy `prep_output/` back into the project
 
-Dependencies are not pinned. The notebook installs `torch`, `nibabel`, `scikit-learn`, `scipy`, `antspyx`, `antspynet` and `nilearn` if they are missing. The attribution code also needs `captum` and `zennit`.
+**Analysis** — run `notebooks/prenatal_xai_kaggle.ipynb` with the preprocessed dataset attached.
+Dependencies are installed by the notebook (`torch`, `nibabel`, `scikit-learn`, `scipy`,
+`antspyx`, `antspynet`, `nilearn`, plus `captum` and `zennit` for the attribution methods).
 
 ## Citation
 
-Das A, Duarte K, Lebel C, Bento M (2024). Deep learning for detecting prenatal alcohol exposure in pediatric brain MRI. *Frontiers in Computational Neuroscience* 18:1434421. doi:10.3389/fncom.2024.1434421
+> Das A, Duarte K, Lebel C, Bento M (2024). Deep learning for detecting prenatal alcohol exposure in pediatric brain MRI. *Frontiers in Computational Neuroscience* 18:1434421. doi:10.3389/fncom.2024.1434421
 
 Dataset: Calgary Preschool MRI Dataset, OSF project `axz5r` (fork `5kz2p`), CC-BY 4.0.
 

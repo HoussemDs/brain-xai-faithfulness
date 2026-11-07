@@ -38,26 +38,21 @@ SFCN on pediatric brain MRI}}
 \begin{abstract}
 \noindent
 Explanation methods are routinely used to justify clinical claims from 3D brain-MRI
-classifiers, yet they are rarely validated before being believed. We audit nine
-attribution methods on a frozen pretrained Simple Fully Convolutional Network (SFCN), a
-brain-age model, using an age-group proxy task on 96 children from the public Calgary
-Preschool control cohort. Because the public data contain controls only, we make no claim
-about prenatal alcohol exposure (PAE); the study instead asks which explanations are
+classifiers, yet they are rarely validated before being believed. We audit nine attribution
+methods on a frozen pretrained Simple Fully Convolutional Network (SFCN), a brain-age model,
+using an age-group proxy task on 96 children from the public Calgary Preschool control cohort.
+The study makes no claim about prenatal alcohol exposure; it asks which explanations are
 faithful to the model, agree with one another, and yield region-level claims that survive
-multiple-comparison correction. Across methods, occlusion-based ReX was by far the most
-faithful (deletion AUC 0.14 vs.\ 0.53--0.78 for the rest), while early-block Grad-CAM was
-the least. Eight of nine methods passed a randomized-weight sanity check, but Integrated
-Gradients failed it decisively (Spearman $r=0.73$ between trained and random models),
-indicating its maps are input-driven rather than model-driven. Methods agreed only weakly
-with one another (mean pairwise Spearman 0.36), and the two Grad-CAM variants were
-anti-correlated. A corrected region-masking test (perturbing a region and measuring the
-drop in predicted-class probability, not an attribution test) identified 15 cortical regions
-under zero-fill masking, though none survived under the pre-specified mean-intensity fill, so
-this result is fill-dependent. We conclude that method choice materially changes
-the ``important regions'' one would report, that occlusion-based faithfulness checks and
-randomized-weight sanity checks should be mandatory, and that Integrated Gradients warrants
-particular caution on this architecture. The contribution is a reusable validation protocol
-and a method verdict, not a diagnostic classifier.
+multiple-comparison correction. Occlusion-based ReX was the most faithful (deletion AUC 0.14
+vs.\ 0.53--0.78 for the rest) and early-block Grad-CAM the least. Eight of nine methods passed
+a randomized-weight sanity check; Integrated Gradients did not (Spearman $r=0.73$ between
+trained and random models), indicating input-driven rather than model-driven maps. Methods
+agreed only weakly (mean pairwise Spearman 0.36), and the two Grad-CAM variants were
+anti-correlated. A corrected region-masking test identified 15 cortical regions under an
+exploratory zero-fill, but none under the pre-specified mean-intensity fill, so this positive
+result is post-hoc and fill-dependent. Method choice materially changes the regions one would
+report, and occlusion-based faithfulness and randomized-weight sanity checks should be routine.
+The contribution is a reusable validation protocol, not a diagnostic classifier.
 \end{abstract}
 
 \textbf{Keywords:} explainable AI, saliency maps, faithfulness, sanity checks, pediatric
@@ -92,24 +87,61 @@ attribution combining faithfulness, randomized-weight sanity checks, resolution,
 agreement, and a corrected anatomical region test; (ii) an empirical verdict over nine
 methods on a real neuroimaging backbone; and (iii) a public, reproducible pipeline. The
 headline finding is that \emph{method choice is not a detail}: faithfulness spans a factor of
-five across methods, one widely used method (Integrated Gradients) fails the sanity check
-outright, and methods agree only weakly on which regions matter.
+five across methods, one widely used method (Integrated Gradients) fails the sanity check,
+and methods agree only weakly on which regions matter.
 
-\section{Related work and relation to Das et al.\ (2024)}
+The paper follows the three questions as a spine. We answer \emph{faithful?} with deletion
+and insertion AUC (Section~\ref{sec:faith}), \emph{model-driven rather than input-driven?}
+with a randomized-weight sanity check (Section~\ref{sec:sanity}), \emph{consistent?} with
+cross-method agreement (Section~\ref{sec:agree}), and \emph{anatomically valid?} with a
+multiple-comparison-corrected region-masking test (Section~\ref{sec:region}); resolution
+(Section~\ref{sec:res}) measures whether a map is fine enough to name a structure at all.
 
-Attribution methods fall into gradient-based families (Saliency, Integrated Gradients
-\citep{sundararajan2017}, SmoothGrad \citep{smilkov2017}, VarGrad \citep{adebayo2018}),
-class-activation methods
-(Grad-CAM \citep{selvaraju2017}), relevance-propagation methods (LRP \citep{bach2015}), and
-perturbation/occlusion methods (e.g.\ RISE \citep{petsiuk2018}; here, ReX). \citet{adebayo2018}
-showed that some popular methods are invariant to model randomization and therefore cannot be
-reflecting learned structure; our randomized-weight sanity check follows that logic.
+\section{Related work}
 
-This study \emph{extends} the explainability step that \citet{das2024} explicitly flagged as
-preliminary. It is not an audit of their clinical conclusion, which we cannot access. We
+\subsection{Attribution methods and why they must be validated}
+Attribution methods assign each input voxel a score for how much it drove a prediction, but
+they compute that score in very different ways, and the differences matter for what a map can
+be trusted to show. \emph{Gradient} methods (Saliency, Integrated Gradients
+\citep{sundararajan2017}, SmoothGrad \citep{smilkov2017}, VarGrad \citep{adebayo2018}) read
+the sensitivity of the output to each voxel and so produce voxel-resolution but often noisy
+maps. \emph{Class-activation} methods (Grad-CAM \citep{selvaraju2017}) weight the network's
+last convolutional feature maps, yielding smooth, coarse localizations at the resolution of
+that feature grid. \emph{Relevance-propagation} methods (LRP \citep{bach2015}) redistribute
+the output backward through the network under conservation rules. \emph{Perturbation/occlusion}
+methods (RISE \citep{petsiuk2018}; here, ReX \citep{chockler2024rex}) instead mask parts of the
+input and watch the prediction move, so they test the model directly rather than reading its
+internals. Because these mechanisms differ, the same scan can yield maps that disagree on
+which region matters, which is exactly what makes a validation step necessary rather than
+optional.
+
+A body of work shows that a visually convincing map need not reflect anything the model
+learned. \citet{adebayo2018} found that several popular methods are largely invariant to
+randomizing the model's weights, so their output cannot be explaining learned structure; our
+randomized-weight sanity check follows that logic. \citet{kindermans2019} showed saliency can
+change under input shifts that leave the model unchanged, and \citet{ghorbani2019} that
+interpretations are fragile to imperceptible perturbations. To move past appearance, two
+functional criteria are now standard: occlusion-based faithfulness, measured as the
+prediction drop when the highlighted voxels are removed (deletion/insertion
+\citep{petsiuk2018}) or as retraining-based importance (ROAR \citep{hooker2019}). Critically,
+this validation literature is almost entirely 2D natural-image classification. The handful of
+medical-imaging studies that test attribution robustness
+\citep{eitel2019,arun2021} report that saliency maps are often unreliable for localization,
+yet 3D neuroimaging attributions are still routinely read anatomically without any such check.
+That gap, a full multi-criterion validation of attribution on a real 3D brain-MRI
+backbone, is what this paper addresses.
+
+\subsection{Relation to Das et al.\ (2024)}
+This is independent research, carried out by an author not affiliated with the original
+study, that builds on and extends the explainability step that \citet{das2024} explicitly
+flagged as preliminary. The original contribution, the frozen-SFCN transfer-learning
+approach to prenatal alcohol exposure and its clinical framing, is theirs; our contribution
+is the validation protocol applied to the same backbone on public data. It is not an audit of
+their clinical conclusion, which we cannot access, and every use we make of their design is
+cited as such. We
 identify six open questions about the original analysis (coarse explanation grid,
 single-region testing, site/recruitment confound, age confound, child-level leakage from
-repeated scans, and a sample-size mismatch), stated in full and revisited one by one in
+repeated scans, and a scan-count-versus-child-count clarification), listed here and then stated and revisited one by one in
 Section~\ref{sec:open} to the extent the public data allow. The complete preregistered protocol (\href{https://osf.io/jycnr}{OSF \texttt{jycnr}}) accompanies this work in the project repository.
 
 \section{Methods}
@@ -146,10 +178,15 @@ Each volume underwent ANTs \citep{avants2011} N4 bias correction \citep{tustison
 antspynet deep-learning brain extraction \citep{tustison2021},
 affine registration to 1\,mm MNI152, and cropping to $160\times192\times160$, the input
 space in which the SFCN was pretrained. All 96 volumes passed visual QC
-(Fig.~\ref{fig:qc}). This deviates from \citet{das2024} by design: they registered to a
-pediatric atlas and used FSL-BET + SynthStrip, whereas we keep inputs in the model's native
-UK~Biobank/MNI152 space so the frozen features remain valid. The cost is additional
-preschool-to-adult warping.
+(Fig.~\ref{fig:qc}). This is a deliberate design decision and differs from \citet{das2024},
+who registered to a pediatric atlas and used FSL-BET + SynthStrip. Because our backbone is
+frozen and never fine-tuned, its features are only valid on inputs drawn from the adult
+UK~Biobank/MNI152 distribution it was trained on; registering the children into a pediatric
+template would move the inputs off that distribution and invalidate the very features we are
+auditing. Keeping the model's native space is therefore the methodologically consistent choice
+for a frozen backbone. Its one cost is that an adult atlas is then applied to preschool brains
+through affine-only registration, so region-level anatomical labels are approximate; we bound
+that cost in Section~\ref{sec:limits}.
 
 \subsection{Model}
 We use the original SFCN \citep{peng2021}, a lightweight fully convolutional brain-age
@@ -191,31 +228,78 @@ M5 & SmoothGrad (20 samples) & & \\
 \end{table}
 
 \subsection{Metrics and statistics}
-\textbf{Faithfulness:} deletion and insertion AUC \citep{petsiuk2018} (lower deletion AUC is
-better), measured by removing the top-ranked voxels in four steps (5, 10, 20, 30\%) with a
-zero fill and integrating the predicted-class probability over those fractions.
-\textbf{Sanity:} Spearman correlation of a method's map between the trained model and a
-fully reinitialized model \citep{adebayo2018}; low correlation is good. The reinitialization
-is complete, not head-only: we deep-copy the model and call \texttt{reset\_parameters()} on
-every module that defines it, so \emph{all six convolutional backbone blocks and the
-classifier head} are reset from a fixed seed. This matters for interpreting the result: a
-method that stays correlated here is unchanged even when the entire network, including the
-frozen feature extractor, is random, so its map cannot be reflecting learned structure. We
-use the standard complete-randomization variant; the layer-by-layer cascading variant of
-\citet{adebayo2018} was not run (Section~\ref{sec:limits}). A method is scored PASS when
-$|r|<0.3$; this band is a pre-specified heuristic, not a published constant, and is drawn as
-the dotted line in Fig.~\ref{fig:sanity}.
-\textbf{Resolution:} fraction of attribution mass in the top 5\% of voxels, and blob count.
-\textbf{Agreement:} pairwise Spearman correlation of region-level scores.
-\textbf{Region test:} this is a masking test on model output, not an attribution test: for
-each Harvard--Oxford cortical region \citep{desikan2006,makris2006} we replace its voxels and
-record the drop in predicted-class probability, against a null of 200 random same-size
-regions, with Benjamini--Hochberg correction at $q=0.05$ \citep{benjamini1995}. We run two
-fills, mean-intensity and zero; because every effect reported below is fill-dependent (only
-the zero fill yields any significant region), the results and Table~\ref{tab:regions} report
-the zero-fill effect, and the mean-fill outcome is given alongside. \textbf{Uncertainty:} 95\% bootstrap CIs (10{,}000 resamples, resampled
-by child). \textbf{Classifier:} repeated (10$\times$) stratified 5-fold CV grouped by child, plus
-a 1{,}000-permutation test against chance. All tests were logged with raw and corrected
+\label{sec:metrics}
+Each metric below answers one of the three framing questions; two supporting metrics
+(resolution, and the classifier/probe checks) tell us whether the map and the proxy are even
+interpretable. Table~\ref{tab:metrics} is the map from metric to question to pass criterion;
+the paragraphs that follow give the detail.
+
+\begin{table}[H]
+\centering
+\caption{What each metric measures, the question it answers, and what counts as a pass.}
+\label{tab:metrics}
+\small
+\begin{tabular}{p{2.6cm}p{4.2cm}p{5.2cm}}
+\toprule
+Metric & Question answered & Pass / reading \\
+\midrule
+Faithfulness & Do the highlighted voxels drive the output? & Low deletion AUC, high insertion AUC \\
+Sanity & Is the map model-driven, not input-driven? & $|r|<0.3$ between trained and random model \\
+Agreement & Do independent methods agree on regions? & High pairwise region-level $r$ \\
+Region test & Which regions is the \emph{model} sensitive to, under correction? & Survives BH-FDR $q=0.05$ vs.\ random-region null \\
+Resolution & Is the map fine enough to name a structure? & Supporting: top-5\% mass, blob count \\
+Classifier / probe & Is the proxy signal real (not noise)? & Supporting: above-chance CV, permutation $p$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Faithfulness (question 1).} Deletion and insertion AUC \citep{petsiuk2018} (lower
+deletion AUC is better). This is a partial-deletion curve, not a full 0--100\% sweep: we remove
+the top-ranked voxels at four fractions (5, 10, 20, 30\%) with a zero fill and integrate the
+predicted-class probability over that range. We cap at 30\% because the discriminative signal
+is concentrated in the top voxels and deleting a third of the brain already drives most methods
+to chance; the AUC should be read as ``area over 5--30\% deletion,'' not the conventional
+full-curve value. If a map is faithful, deleting what it ranks highest should collapse the
+prediction fastest.
+
+\textbf{Sanity (question 2).} Spearman correlation of a method's map between the trained model
+and a fully reinitialized model \citep{adebayo2018}; low correlation is good. The
+reinitialization is complete, not head-only: we deep-copy the model and call
+\texttt{reset\_parameters()} on every module that defines it, so \emph{all six convolutional
+backbone blocks and the classifier head} are reset from a fixed seed. This matters for
+interpreting the result: a method that stays correlated here is unchanged even when the entire
+network, including the frozen feature extractor, is random, so its map cannot be reflecting
+learned structure. We use the standard complete-randomization variant; the layer-by-layer
+cascading variant of \citet{adebayo2018} was not run (Section~\ref{sec:limits}). Maps are
+compared as the per-voxel absolute attribution, with a single Spearman correlation taken over
+all voxels of the two maps; the random model is a single reinitialization from a fixed seed, so
+the check uses one random draw rather than an average over seeds. A method is scored PASS when
+$|r|<0.3$; this band is a pre-specified heuristic, not a published constant, and is drawn as the
+dotted line in Fig.~\ref{fig:sanity}.
+
+\textbf{Agreement (question 3, part A).} Pairwise Spearman correlation of region-level scores:
+if the methods are measuring the same underlying signal, their regional rankings should line
+up.
+
+\textbf{Region test (question 3, part B).} In plain terms, this test asks which brain regions
+the \emph{model} actually depends on, and it does so \emph{without reference to any saliency
+map}: for each Harvard--Oxford cortical region \citep{desikan2006,makris2006} we blank the
+region's voxels and record the drop in predicted-class probability. A large drop means the
+model relied on that region. This is why it is a masking test on model output, not an
+attribution test; it validates the model's regional dependence directly, so it can confirm
+or refute what the maps claim. Significance is against a null of 200 random same-size regions,
+with Benjamini--Hochberg correction at $q=0.05$ \citep{benjamini1995}. We run two fills,
+mean-intensity and zero; because every effect reported below is fill-dependent (only the zero
+fill yields any significant region), the results and Table~\ref{tab:regions} report the
+zero-fill effect, with the mean-fill outcome given alongside.
+
+\textbf{Resolution (supporting).} Fraction of attribution mass in the top 5\% of voxels, and
+blob count, how localized a map is, hence whether it is fine enough to name a structure.
+
+\textbf{Uncertainty and significance.} 95\% bootstrap CIs (10{,}000 resamples, resampled by
+child) on every metric. The classifier check is a repeated (10$\times$) stratified 5-fold CV
+grouped by child, plus a 1{,}000-permutation test against chance, establishing that the proxy
+signal is real before any map is interpreted. All tests were logged with raw and corrected
 $p$-values; tests run after seeing the data are flagged exploratory in the pre-specified plan.
 
 \section{Results}
@@ -236,10 +320,15 @@ is not a scientific claim. Cross-validated accuracy was $0.643\pm0.120$ over 50 
 \end{figure}
 
 \subsection{Faithfulness}
-ReX (M9) is in a different league from every other method: deletion AUC 0.141
-([0.119, 0.165]) with high insertion AUC (0.755), meaning the voxels it flags genuinely
-drive the output. Only the extremes are individually separable: ReX at the top, and LRP (M7)
-and early-block Grad-CAM (M2) at the bottom. The five mid-ranked methods (Integrated
+\label{sec:faith}
+Addressing question~1 (do the highlighted voxels drive the output?), ReX (M9) is clearly the
+most faithful method: deletion AUC 0.141 ([0.119, 0.165]) against 0.53--0.78 for the rest. This
+advantage is partly by construction and we state it plainly: ReX searches for regions whose
+removal changes the prediction, and deletion AUC scores exactly that property, so the two are
+not independent. The insertion AUC (0.755), a criterion ReX does not optimize, points the same
+way and is the less circular evidence that its voxels drive the output. Only the extremes are
+individually separable: ReX at the top, and LRP (M7) and early-block Grad-CAM (M2) at the
+bottom. The five mid-ranked methods (Integrated
 Gradients, Guided Backprop, SmoothGrad, Saliency, VarGrad) have heavily overlapping bootstrap
 CIs and should be read as a tie, not a rank order. The paper's method (M1) is middling, and
 early-block Grad-CAM (M2) is the worst of the nine (Table~\ref{tab:faith},
@@ -274,23 +363,30 @@ M2 Grad-CAM (early) & \textbf{0.777} & [0.730, 0.822] & 0.488 \\
 \end{figure}
 
 \subsection{Randomized-weight sanity check}
-Eight methods pass (low trained-vs-random correlation). \textbf{Integrated Gradients fails}
-decisively ($r=0.73$): its map is almost unchanged when \emph{every} layer, backbone and head,
-is reinitialized, so on this network it reflects image structure rather than learned content
+\label{sec:sanity}
+Addressing question~2 (is the map model-driven rather than input-driven?),
+eight methods pass (low trained-vs-random correlation). Integrated Gradients does not
+($r=0.73$): its map is almost unchanged when every layer, backbone and head, is reinitialized,
+so on this network it reflects image structure rather than learned content
 (Table~\ref{tab:sanity}, Fig.~\ref{fig:sanity}). Because the randomization is complete rather
 than head-only, this correlation cannot be an artifact of an unchanged frozen backbone: the
-backbone is random too. This is the study's single most important caution, because IG is
-widely used and visually convincing.
+backbone is random too. Part of this is mechanical and worth stating: with the zero baseline we
+use, Integrated Gradients reduces to the input-times-gradient form, so a dependence on input
+intensity is built into the method and survives weight randomization. The practical caution is
+nonetheless real, because IG is widely used in neuroimaging \citep{eitel2019} and its maps look
+convincing.
 
 Guided Backprop (M8), our negative control, passes here ($r=0.168$), which is at first
 surprising: \citet{adebayo2018} report it as largely invariant to model randomization and
-therefore a method that typically \emph{fails} this check. Two things reconcile the
-difference. First, the sanity verdict depends on architecture and implementation: Guided
-Backprop's insensitivity was shown on 2D ImageNet CNNs with ReLU backprop overrides, and on a
-frozen six-block 3D SFCN with a small trained head the trained-vs-random map is less
-correlated. Second, passing the sanity check is necessary, not sufficient: M8 remains a poor
-explanation on the metric that matters here, with a near-chance deletion AUC (0.556), so we do
-not promote it on the strength of the sanity result alone.
+therefore a method that typically \emph{fails} this check. The reconciliation cuts two ways,
+and the second way is a caveat on our own test. The verdict depends on architecture and
+implementation: Guided Backprop's insensitivity was shown on 2D ImageNet CNNs with ReLU
+backprop overrides, and on a frozen six-block 3D SFCN with a small trained head the
+trained-vs-random map is less correlated. But a control passing where the literature expects it
+to fail also means our single-draw, complete-randomization check is less sensitive here than
+the cascading variant would be, so the PASS column should be read as a coarse filter, not a
+certificate. Passing it is in any case necessary, not sufficient: M8 is still a poor explanation
+on the metric that matters, with a near-chance deletion AUC (0.556).
 
 \begin{table}[H]
 \centering
@@ -322,6 +418,7 @@ M7 LRP & 0.255 & PASS \\
 \end{figure}
 
 \subsection{Resolution}
+\label{sec:res}
 The two methods that operate on the $5\times6\times5$ feature grid, final-block Grad-CAM (M1)
 and ReX (M9), produce only about three large blobs each; in Fig.~\ref{fig:resolution} their
 blob counts sit near zero against a scale dominated by the voxel-level methods, which fragment
@@ -340,11 +437,13 @@ scale; this is inherent to the $5\times6\times5$ grid, not an artifact.}
 \end{figure}
 
 \subsection{Cross-method agreement}
+\label{sec:agree}
 \begin{sloppypar}
 Mean pairwise region-level Spearman correlation is only 0.36 (Fig.~\ref{fig:agreement}). The
-gradient family (M3/M5/M6) agrees internally ($r$ up to 0.96), but the two Grad-CAM variants
-are anti-correlated ($r=-0.61$), and ReX and LRP sit largely on their own.
-Which ``important regions'' one reports depends heavily on the method chosen.
+gradient family (M3/M5/M6) agrees strongly among itself, with pairwise $r$ reaching 0.96 at the
+top of its range (reported as the maximum, not a typical value), but the two Grad-CAM variants
+are anti-correlated ($r=-0.61$), and ReX and LRP sit largely on their own. Which regions one
+reports depends heavily on the method chosen.
 \end{sloppypar}
 
 \begin{figure}[H]
@@ -355,11 +454,22 @@ Which ``important regions'' one reports depends heavily on the method chosen.
 \end{figure}
 
 \subsection{Anatomical region test}
-Under zero-fill masking, fifteen cortical regions survive Benjamini--Hochberg correction at
-$q=0.05$ (Table~\ref{tab:regions}, Fig.~\ref{fig:regions}); the Lingual Gyrus carries by far
-the largest effect. The result is fill-dependent: under the mean-intensity fill no region
-survives correction (smallest raw $p=0.95$), so the regions below should be read as
-significant for zero-region deletion specifically, not as a fill-robust anatomical claim. The
+\label{sec:region}
+Under an exploratory zero-fill (a post-hoc deviation from the pre-specified mean-intensity
+fill; see Section~\ref{sec:deviations}), fifteen cortical regions survive Benjamini--Hochberg
+correction at $q=0.05$ (Table~\ref{tab:regions}, Fig.~\ref{fig:regions}); the Lingual Gyrus
+carries the largest effect. The pre-specified result is the opposite: under the mean-intensity
+fill no region survives correction (smallest raw $p=0.95$). That $p=0.95$ is expected, not
+anomalous: the test is two-sided on the magnitude of the probability drop, and under the
+mean-intensity fill every region's observed drop is near zero and smaller than almost all
+same-size random-region drops, so mean-intensity replacement is too gentle a perturbation to
+expose regional dependence, not evidence that the regions are unimportant. The zero fill has
+the opposite caveat: blanking a region to zero is itself out of distribution, so part of its
+larger effect may reflect how much signal is removed rather than the region's specific
+importance. The same-size random-region null absorbs the gross ``how much brain'' component,
+but not the out-of-distribution character of a zero patch. The surviving regions should
+therefore be read as significant for zero-region deletion specifically, an exploratory finding,
+not a fill-robust anatomical claim. The
 informative column is the effect size, not the FDR $p$: with a null of 200 random regions the
 smallest attainable corrected $p$ is a floor (hence the repeated $0.017$), so the $p$ column
 separates ``survives'' from ``does not'' but does not rank the regions. The full per-region
@@ -433,7 +543,7 @@ Figs.~\ref{fig:resolution} and \ref{fig:agreement} are visible here.}
 \subsection{Pre-specified hypotheses}
 Results are reported against the six hypotheses exactly as registered (OSF \texttt{jycnr}).
 
-\textbf{H1} (Grad-CAM produces smoother, coarser maps than Integrated Gradients and SmoothGrad): \emph{supported}; early-block Grad-CAM is the most diffuse and carries the lowest top-5\% attribution mass, whereas the gradient methods are voxel-resolution and fragmented.
+\textbf{H1} (Grad-CAM produces smoother, coarser maps than Integrated Gradients and SmoothGrad): \emph{supported on blob count, mixed on mass}. Both Grad-CAM variants resolve to only $\approx$3 connected blobs, versus tens of thousands for Integrated Gradients and SmoothGrad (Fig.~\ref{fig:resolution}); this blob-count gap is the unambiguous evidence for ``coarser.'' Top-5\% attribution mass does not discriminate cleanly: early-block Grad-CAM (M2) carries the lowest mass, but final-block Grad-CAM (M1, $\approx$0.30) is \emph{more} concentrated than SmoothGrad ($\approx$0.19), so we rest the claim on blob count rather than mass.
 
 \textbf{H2} (large anatomical regions are more likely to survive correction than small named structures such as the pons and corpus callosum): \emph{not supported}; under the pre-specified mean-intensity fill no region survived BH-FDR ($q=0.05$), so the large-versus-small contrast could not be tested; a zero-fill sensitivity check yielded 15 surviving regions, confirming the region test is fill-dependent.
 
@@ -441,11 +551,12 @@ Results are reported against the six hypotheses exactly as registered (OSF \text
 
 \textbf{H4} (for at least one method, randomized-weight maps differ from trained-weight maps): \emph{supported}; most methods change substantially under weight randomization; Integrated Gradients is the lone weak case, retaining the highest trained-versus-random similarity ($r=0.73$).
 
-\textbf{H5} (a block-6 linear probe beats a block-2 probe): \emph{marginally supported}; 0.635 vs.\ 0.624.
+\textbf{H5} (a block-6 linear probe beats a block-2 probe): \emph{not supported}; 0.635 vs.\ 0.624 is a 0.011 gap, far inside the cross-validation standard deviation ($\pm$0.12), so depth confers no measurable advantage for this proxy and the two probes should be read as tied.
 
-\textbf{H6} (age-group accuracy exceeds chance under a child-level label-permutation test): \emph{supported}; cross-validated accuracy 0.635, permutation $p=0.01$ (1{,}000 permutations), confirming a usable but modest proxy signal.
+\textbf{H6} (age-group accuracy exceeds chance under a child-level label-permutation test): \emph{supported}; the child-level label-permutation test was run on the frozen-feature linear probe (accuracy 0.635, permutation $p=0.01$, 1{,}000 permutations), and the repeated-CV head reaches $0.643\pm0.120$. The proxy signal is usable but modest; 0.635 is the probe accuracy that the permutation test refers to, not the CV-head accuracy.
 
 \subsection{Deviations and exploratory analyses}
+\label{sec:deviations}
 The following are not part of the registered hypotheses and are reported as exploratory: (i) the count of regions surviving correction and its dependence on the masking fill, an elaboration of H2; (ii) whether age is independently decodable from the frozen features as a possible confound (Ridge $R^2=0.11$); and (iii) fine-tuning the SFCN, which was pre-specified as out of scope and not run. Choices made after inspecting results are flagged as exploratory here and in the project decision log.
 
 \subsection{The six open questions about the original analysis}
@@ -463,48 +574,68 @@ point is only that a multi-region, FDR-controlled test can be run where a single
 features ($R^2=0.11$); a plausible confound worth controlling.
 \item \textbf{Child-level leakage}, \emph{addressed by design}: one scan per child and
 child-grouped CV.
-\item \textbf{Scan count vs.\ child count}, \emph{a counting distinction, not an error}: the
-public release is longitudinal and lists multiple visits per child, so a T1 count (the
-release lists on the order of 279) is larger than the number of unique children (96). We note
-this only to explain why our $n$ is child-level; it is not a claim that any prior count was
-wrong.
+\item \textbf{Scan count vs.\ child count}, \emph{a clarification of our own $n$, not a
+criticism of the original study}: the public release is longitudinal and lists multiple visits
+per child. Our reading of that release is that its total T1 count therefore exceeds the number
+of unique children (by our count on the order of 279 scans against 96 children), though this
+scan total is our inference from the public visit structure, not a figure stated by
+\citet{das2024}. We include it only to explain why our analysis is child-level ($n=96$, one
+scan each); we make no claim that any count in the original work is incorrect.
 \end{enumerate}
 
 \subsection{What this means in practice}
-Method choice materially changes the reported ``important regions.'' Three practices follow:
-report occlusion-based faithfulness (deletion/insertion) rather than trusting a map's
-appearance; run a randomized-weight sanity check and discard methods that fail it (here,
-Integrated Gradients); and never report a single method's regions without a corrected
-statistical test.
+Method choice materially changes the reported ``important regions.'' Three practices follow,
+one per framing question: for faithfulness, report occlusion-based deletion/insertion rather
+than trusting a map's appearance; for model-dependence, run a randomized-weight sanity check
+and discard methods that fail it (here, Integrated Gradients); and for anatomical validity,
+never report a single method's regions without a corrected statistical test.
 
 \section{Limitations}
 \label{sec:limits}
-$n=96$; a single proxy task; one cortical atlas; and no PAE data. The backbone weights are the
+$n=96$; a single proxy task; one cortical atlas; and no PAE data. One caution follows from the
+native-space design justified in the Methods: the adult Harvard--Oxford atlas reaches the
+preschool brains through affine-only registration, so for children aged 2.6--6.9\,y the region
+identities in Table~\ref{tab:regions} are approximate anatomical labels, and the
+anatomical-validity claim holds at the resolution of the masking test rather than of individual
+gyri. Age-appropriate pediatric templates and nonlinear registration would sharpen the labels
+\citep{fonov2011} but would invalidate the frozen features, so the trade-off is deliberate, not
+an oversight. The backbone weights are the
 public UK~Biobank brain-age release of \citet{peng2021} \citep{sfcnweights}; we report the
 checkpoint used rather than relying on an unverified source. The proxy head is weak
 ($\approx$64\% CV accuracy), and faithfulness and sanity verdicts are properties of the
 model being explained: a stronger classifier could rank the methods differently, so the
 rankings here should be read as holding for this modest-accuracy model, not as universal. At
 $n=96$ the study is powered for medium-to-large region
-effects; small effects may be inconclusive (H3 and H4 do not depend on effect size). Two tests
-we did not run bound the interpretation. First, we measured cross-method \emph{agreement} but
+effects; small effects may be inconclusive (H3 and H4 do not depend on effect size). Three
+gaps bound the interpretation. First, we measured cross-method \emph{agreement} but
 not true map \emph{stability}: we did not quantify how a single method's map varies under small
 input perturbations or across random seeds, so claims about reproducibility within a method are
 out of scope. Second, our sanity check uses complete model randomization; we did not perform the
 layer-by-layer cascading randomization of \citet{adebayo2018}, which would localize where in the
-backbone a method's dependence breaks down. Crucially, this work validates an explanation
-protocol on an age-group proxy in public controls. It says \emph{nothing} about alcohol exposure,
-FASD, or the original paper's clinical regions, which require the private PAE data. The
-deliverable is the method verdict, not the accuracy.
+backbone a method's dependence breaks down. Third, we report the method ranking against the observed spread of deletion AUCs rather than
+against an explicit random-attribution floor; a random-map baseline (expected deletion AUC near
+0.5) would further anchor the weak methods but is not required for the comparative ranking
+reported here. This work validates an explanation
+protocol on an age-group proxy in public controls; it does not speak to alcohol exposure,
+FASD, or the original paper's clinical regions, which require the private PAE data.
 
 \section{Conclusion}
 On a frozen pretrained SFCN, nine explanation methods gave sharply different accounts of what
 the model uses. Occlusion-based ReX was the most faithful; Integrated Gradients failed a basic
 sanity check; methods agreed only weakly; and a corrected masking test isolated 15 cortical
-regions under zero-fill, though not under the mean-intensity fill. The practical message for
+regions under an exploratory zero-fill, but none under the pre-specified mean-intensity fill,
+so that positive result is post-hoc. The practical message for
 neuroimaging XAI is that attribution maps must be validated
 for faithfulness, model-dependence, and anatomical significance, before any of them is
 read as evidence about the brain.
+
+\section*{Acknowledgments}
+This work builds on \citet{das2024}, whose study motivated the present validation and whose
+frozen-SFCN transfer-learning design we reuse on public data; we thank those authors for
+clearly flagging their explainability step as preliminary, which is what this paper extends.
+We also thank \citet{reynolds2020} and the Calgary Preschool MRI study for releasing the
+control cohort under CC-BY 4.0, and \citet{peng2021} for the public SFCN brain-age weights.
+The author declares no affiliation with the original study and no competing interests.
 
 \section*{Reproducibility}
 Data: public Calgary Preschool controls (OSF fork \texttt{5kz2p}, CC-BY 4.0). Code, the
