@@ -1,0 +1,37 @@
+# Local data and outputs (never committed)
+full_ds/
+upload/
+prep_output/
+work/
+
+# Imaging and model files
+*.nii
+*.nii.gz
+*.npy
+*.h5
+*.dat
+*.pt
+*.pth
+
+# Source spreadsheets (download from OSF instead)
+*.xlsx
+
+# Editor and OS files
+.directory
+.DS_Store
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.zip
+*.pdf
+weights/
+
+# Large Kaggle run output (12GB; per-subject maps go to Zenodo, not git)
+kaggle_output_prenatal_xai_96/
+
+# Keep the compiled manuscript (our own work); original_paper.pdf stays ignored by *.pdf above
+!paper/main.pdf
+
+# Working backups / scratch notebooks (not for publication)
+*.sexbak
+full_with_preprocessing_prenatal-xai-smoke_to_be_used_and then_delelted _to run in kaggle.ipynb

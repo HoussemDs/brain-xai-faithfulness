@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software or its results, please cite it as below."
+title: "Pre-specified multi-method XAI faithfulness validation for a pediatric SFCN"
+authors:
+  - given-names: "Houssem Eddine"
+    email: "houssemeddineds@gmail.com"
+    orcid: "https://orcid.org/0009-0007-2027-2520"
+    affiliation: "ESPRIT, Tunis, Tunisia"
+repository-code: "https://github.com/HoussemDs/xai-faithfulness-brain-mri"
