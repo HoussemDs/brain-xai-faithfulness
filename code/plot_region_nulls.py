@@ -1,6 +1,6 @@
 """Two-row figure: registered null (200 scattered random regions) vs sensitivity null
 (500 contiguous translated regions), each with mean and zero fill. Red = survives BH-FDR q=0.05
-within its fill over the 48 regions.
+pooled over all 96 region-by-fill tests.
 
 Usage:
     python code/plot_region_nulls.py --registered kaggle_output_prenatal_xai_96/results/region_masking_all_pvalues.csv \
@@ -45,7 +45,7 @@ def main():
             ax.set_xlabel("masking effect (probability drop)", fontsize=8)
             ax.set_ylabel("-log10 FDR p", fontsize=8)
             n_sig = sum(float(r["fdr_p"]) < 0.05 for r in g)
-            ax.text(0.98, 0.02, f"survive q<0.05: {n_sig}/48", transform=ax.transAxes,
+            ax.text(0.98, 0.02, f"survive q<0.05: {n_sig}/48 (pooled BH, 96 tests)", transform=ax.transAxes,
                     ha="right", fontsize=8)
     fig.tight_layout()
     fig.savefig(a.out, dpi=160)

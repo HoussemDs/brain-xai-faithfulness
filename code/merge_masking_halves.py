@@ -72,14 +72,12 @@ def main():
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
 
-    # 1. Merge halves and recompute BH-FDR over all 48 regions per fill.
+    # 1. Merge halves and recompute BH-FDR pooled over all 96 region-by-fill tests.
     rows = read(os.path.join(args.half_a, "region_masking_all_pvalues.csv")) + read(
         os.path.join(args.half_b, "region_masking_all_pvalues.csv"))
-    for fill in sorted({r["fill"] for r in rows}):
-        g = [r for r in rows if r["fill"] == fill]
-        q = bh([float(r["raw_p"]) for r in g])
-        for r, qq in zip(g, q):
-            r["fdr_p"] = f"{qq:.6g}"
+    q_all = bh([float(r["raw_p"]) for r in rows])
+    for r, qq in zip(rows, q_all):
+        r["fdr_p"] = f"{qq:.6g}"
     out_regions = os.path.join(args.out, "region_masking_merged.csv")
     with open(out_regions, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
@@ -128,7 +126,7 @@ def main():
         colors = ["red" if float(r["fdr_p"]) < 0.05 else "grey" for r in g]
         ax.scatter(xs, ys, c=colors, s=18)
         ax.axhline(-math.log10(0.05), ls="--", color="k", lw=0.8)
-        ax.set_title(f"{fill}-fill masking (BH over 48 regions)")
+        ax.set_title(f"{fill}-fill masking (BH over 96 tests)")
         ax.set_xlabel("masking effect (probability drop)")
         ax.set_ylabel("-log10 FDR p")
         for r, xx, yy in sorted(zip(g, xs, ys), key=lambda t: -t[2])[:3]:

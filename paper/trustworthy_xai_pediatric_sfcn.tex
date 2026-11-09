@@ -50,7 +50,7 @@ a randomized-weight sanity check; Integrated Gradients did not (Spearman $r=0.73
 trained and random models), indicating input-driven rather than model-driven maps. Methods
 agreed only weakly (mean pairwise Spearman 0.36), and the two Grad-CAM variants were
 anti-correlated. The pre-registered region test (200 random same-size regions) found no cortical
-region under the mean-intensity fill. Under zero fill it flagged 15 regions, all at the null's
+region under the mean-intensity fill. Under zero fill it flagged 14 regions, all at the null's
 $p$-value floor. A post-hoc sensitivity analysis with a 500-draw contiguous null found no region under
 either fill, so the zero-fill result is not robust to the choice of null. Method-to-masking agreement
 was weak (Spearman $-0.04$ to $0.19$). Method choice materially changes which explanations look faithful,
@@ -290,8 +290,8 @@ region's voxels and record the drop in predicted-class probability. A large drop
 model relied on that region. This is why it is a masking test on model output, not an
 attribution test; it validates the model's regional dependence directly, so it can confirm
 or refute what the maps claim. Significance is tested against the pre-registered null of 200 random same-size regions,
-with Benjamini--Hochberg correction at $q=0.05$ \citep{benjamini1995} applied within each fill over the
-48 regions. The primary fill is mean-intensity, as registered; zero fill was registered as a check. The
+with Benjamini--Hochberg correction at $q=0.05$ \citep{benjamini1995} applied across all 96 region-by-fill tests
+(48 regions under each fill). The primary fill is mean-intensity, as registered; zero fill was registered as a check. The
 smallest attainable $p$ under this null is $1/201\approx0.005$. In addition to the registered 200 draws, we ran a
 post-hoc sensitivity analysis with 500 same-size regions drawn as translations of the real mask inside gray matter (a contiguous
 null, smallest attainable $p$ of $1/501\approx0.002$). This analysis is exploratory and is listed in Section~\ref{sec:deviations}. We report both
@@ -495,12 +495,13 @@ the method chosen.
 \subsection{Anatomical region test}
 \label{sec:region}
 \textbf{Registered analysis.} Under the mean-intensity fill, no region survives correction at $q=0.05$
-(smallest raw $p=0.945$). Under the zero-fill check, fifteen regions survive (Table~\ref{tab:registered}).
-Fourteen have raw $p=0.005$ and one has $p=0.010$, at or near the smallest attainable under the 200-draw null,
-so the correction cannot rank them. Their FDR values sit at a floor (0.017 for fourteen, 0.032 for one).
+(smallest raw $p=0.945$). Under the zero-fill check, fourteen regions survive (Table~\ref{tab:registered}).
+All fourteen have raw $p=0.005$, the smallest attainable under the 200-draw null, so the correction cannot rank them;
+their pooled FDR values are all 0.034. One further region (Supramarginal Gyrus, posterior division, raw $p=0.010$)
+has FDR 0.064 and does not survive.
 
 \textbf{Sensitivity analysis.} Under the 500-draw contiguous null, no region survives under either fill
-(Table~\ref{tab:regions}). Under zero fill the smallest FDR $p$ is 0.096 (Lingual Gyrus, raw $p=0.002$). Under
+(Table~\ref{tab:regions}). Under zero fill the smallest FDR $p$ is 0.192 (Lingual Gyrus, raw $p=0.002$). Under
 mean fill the smallest raw $p$ is 0.19. The same masking effects are used in both analyses, so the
 method-to-masking correlations below do not depend on the null.
 
@@ -518,30 +519,29 @@ dependence, so we claim no anatomical validity for any method.
 
 \begin{table}[H]
 \centering
-\caption{Regions surviving BH-FDR $q=0.05$ under the registered null (200 random regions), zero fill. This is an
+\caption{Regions surviving BH-FDR $q=0.05$ under the registered null (200 random regions), zero fill, BH pooled over all 96 region-by-fill tests. This is an
 exploratory check: zero fill was registered as a check, not the primary fill. Effect is the probability drop on
-masking. All fifteen sit at the null's $p$ floor, so the correction cannot rank them.}
+masking. All fourteen sit at the null's $p$ floor, so the correction cannot rank them.}
 \label{tab:registered}
 \small
 \begin{tabular}{lrrrr}
 \toprule
 Region & Effect & $n$ voxels & Raw $p$ & FDR $p$ \\
 \midrule
-Lingual Gyrus & 0.257 & 26{,}880 & 0.005 & 0.017 \\
-Temporal Fusiform Cortex{,} posterior division & 0.111 & 12{,}680 & 0.005 & 0.017 \\
-Insular Cortex & 0.081 & 21{,}449 & 0.005 & 0.017 \\
-Parahippocampal Gyrus{,} posterior division & 0.069 & 5{,}698 & 0.005 & 0.017 \\
-Inferior Temporal Gyrus{,} temporooccipital part & 0.063 & 11{,}973 & 0.005 & 0.017 \\
-Cingulate Gyrus{,} anterior division & 0.059 & 20{,}844 & 0.005 & 0.017 \\
-Parahippocampal Gyrus{,} anterior division & 0.057 & 9{,}956 & 0.005 & 0.017 \\
-Cingulate Gyrus{,} posterior division & 0.057 & 19{,}228 & 0.005 & 0.017 \\
-Occipital Fusiform Gyrus & 0.053 & 14{,}538 & 0.005 & 0.017 \\
-Central Opercular Cortex & 0.044 & 14{,}953 & 0.005 & 0.017 \\
-Parietal Operculum Cortex & 0.043 & 8{,}739 & 0.005 & 0.017 \\
-Subcallosal Cortex & 0.039 & 9{,}021 & 0.005 & 0.017 \\
-Frontal Operculum Cortex & 0.035 & 5{,}313 & 0.005 & 0.017 \\
-Supramarginal Gyrus{,} posterior division & 0.029 & 18{,}720 & 0.010 & 0.032 \\
-Planum Temporale & 0.025 & 8{,}032 & 0.005 & 0.017 \\
+Lingual Gyrus & 0.257 & 26{,}880 & 0.005 & 0.034 \\
+Temporal Fusiform Cortex{,} posterior division & 0.111 & 12{,}680 & 0.005 & 0.034 \\
+Insular Cortex & 0.081 & 21{,}449 & 0.005 & 0.034 \\
+Parahippocampal Gyrus{,} posterior division & 0.069 & 5{,}698 & 0.005 & 0.034 \\
+Inferior Temporal Gyrus{,} temporooccipital part & 0.063 & 11{,}973 & 0.005 & 0.034 \\
+Cingulate Gyrus{,} anterior division & 0.059 & 20{,}844 & 0.005 & 0.034 \\
+Parahippocampal Gyrus{,} anterior division & 0.057 & 9{,}956 & 0.005 & 0.034 \\
+Cingulate Gyrus{,} posterior division & 0.057 & 19{,}228 & 0.005 & 0.034 \\
+Occipital Fusiform Gyrus & 0.053 & 14{,}538 & 0.005 & 0.034 \\
+Central Opercular Cortex & 0.044 & 14{,}953 & 0.005 & 0.034 \\
+Parietal Operculum Cortex & 0.043 & 8{,}739 & 0.005 & 0.034 \\
+Subcallosal Cortex & 0.039 & 9{,}021 & 0.005 & 0.034 \\
+Frontal Operculum Cortex & 0.035 & 5{,}313 & 0.005 & 0.034 \\
+Planum Temporale & 0.025 & 8{,}032 & 0.005 & 0.034 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -549,7 +549,7 @@ Planum Temporale & 0.025 & 8{,}032 & 0.005 & 0.017 \\
 \begin{table}[H]
 \centering
 \caption{Sensitivity analysis: region masking under the 500-draw contiguous null, merged over both halves;
-BH-FDR over all 48 regions within each fill. Top five zero-fill and top three mean-fill regions by raw $p$.
+BH-FDR pooled over all 96 region-by-fill tests. Top five zero-fill and top three mean-fill regions by raw $p$.
 None survives $q=0.05$. Effect is the probability drop on masking; $n$ is region voxel count.}
 \label{tab:regions}
 \small
@@ -557,12 +557,12 @@ None survives $q=0.05$. Effect is the probability drop on masking; $n$ is region
 \toprule
 Fill & Region & Effect & $n$ voxels & Raw $p$ & FDR $p$ \\
 \midrule
-zero & Lingual Gyrus & 0.257 & 26{,}880 & 0.002 & 0.096 \\
-zero & Parietal Operculum Cortex & 0.043 & 8{,}739 & 0.024 & 0.524 \\
-zero & Cingulate Gyrus, anterior div. & 0.059 & 20{,}844 & 0.058 & 0.524 \\
-zero & Inferior Temporal Gyrus, temporooccipital & 0.063 & 11{,}973 & 0.076 & 0.524 \\
-zero & Planum Temporale & 0.025 & 8{,}032 & 0.086 & 0.524 \\
-mean & Precentral Gyrus & 0.015 & 70{,}031 & 0.186 & 0.996 \\
+zero & Lingual Gyrus & 0.257 & 26{,}880 & 0.002 & 0.192 \\
+zero & Parietal Operculum Cortex & 0.043 & 8{,}739 & 0.024 & 0.990 \\
+zero & Cingulate Gyrus, anterior div. & 0.059 & 20{,}844 & 0.058 & 0.990 \\
+zero & Inferior Temporal Gyrus, temporooccipital & 0.063 & 11{,}973 & 0.076 & 0.990 \\
+zero & Planum Temporale & 0.025 & 8{,}032 & 0.086 & 0.990 \\
+mean & Precentral Gyrus & 0.015 & 70{,}031 & 0.186 & 0.990 \\
 mean & Superior Frontal Gyrus & 0.011 & 45{,}246 & 0.206 & 0.996 \\
 mean & Middle Temporal Gyrus, posterior div. & 0.007 & 21{,}879 & 0.218 & 0.996 \\
 \bottomrule
@@ -574,7 +574,7 @@ mean & Middle Temporal Gyrus, posterior div. & 0.007 & 21{,}879 & 0.218 & 0.996 
 \includegraphics[width=0.95\linewidth]{10_region_nulls.png}
 \caption{Region masking under the registered null (top, 200 random regions) and the sensitivity null (bottom,
 500 contiguous draws), mean fill (left) and zero fill (right). Masking effect vs.\ $-\log_{10}$ FDR $p$ (BH over
-48 regions per fill). Dashed line marks $q=0.05$; red points survive within their fill.}
+48 regions per fill; pooled over 96 tests). Dashed line marks $q=0.05$; red points survive the pooled correction.}
 \label{fig:regions}
 \end{figure}
 
@@ -607,7 +607,7 @@ Results are reported against the six hypotheses exactly as registered (OSF \text
 
 \textbf{H1} (Grad-CAM produces smoother, coarser maps than Integrated Gradients and SmoothGrad): \emph{supported on blob count, mixed on mass}. Final-block Grad-CAM resolves to $\approx$3 connected blobs and early-block Grad-CAM to $\approx$13, versus $\approx$19{,}000 for SmoothGrad and $\approx$42{,}000 for Integrated Gradients (Fig.~\ref{fig:resolution}); this blob-count gap is the unambiguous evidence for ``coarser.'' Top-5\% attribution mass does not discriminate cleanly: early-block Grad-CAM (M2) carries the lowest mass, but final-block Grad-CAM (M1, $\approx$0.30) is \emph{more} concentrated than SmoothGrad ($\approx$0.19), so we rest the claim on blob count rather than mass.
 
-\textbf{H2} (large anatomical regions are more likely to survive correction than small named structures such as the pons and corpus callosum): \emph{not testable}; under the registered mean-intensity test no region survives BH-FDR ($q=0.05$), and the 15 zero-fill survivors of the registered null do not survive the sensitivity null (Section~\ref{sec:region}), so the large-versus-small contrast cannot be tested with a confirmatory result.
+\textbf{H2} (large anatomical regions are more likely to survive correction than small named structures such as the pons and corpus callosum): \emph{not testable}; under the registered mean-intensity test no region survives BH-FDR ($q=0.05$), and the 14 zero-fill survivors of the registered null do not survive the sensitivity null (Section~\ref{sec:region}), so the large-versus-small contrast cannot be tested with a confirmatory result.
 
 \textbf{H3} (Integrated Gradients and SmoothGrad correlate more with each other than either does with final-block Grad-CAM): \emph{supported descriptively}; mean pairwise region-level Spearman is 0.36, and the gradient family (including IG and SmoothGrad) agrees internally (up to $r=0.96$) while Grad-CAM sits apart. This is reported descriptively; no formal test of the difference between dependent correlations was pre-specified or run.
 
@@ -619,7 +619,7 @@ Results are reported against the six hypotheses exactly as registered (OSF \text
 
 \subsection{Deviations and exploratory analyses}
 \label{sec:deviations}
-The following are not part of the registered hypotheses and are reported as exploratory: (i) the sensitivity null (500 contiguous draws), added after the first run, and the per-fill BH correction over 48 regions (the registered plan specifies BH across all method-by-region tests), together with the observation that the zero-fill result depends on the null model; (ii) the random-order baseline and the method-to-masking correlation analysis, both added after the first run; (iii) whether age is independently decodable from the frozen features as a possible confound (Ridge $R^2=0.11$); and (iv) fine-tuning the SFCN, which was pre-specified as out of scope and not run. Choices made after inspecting results are flagged as exploratory here and in the project decision log.
+The following are not part of the registered hypotheses and are reported as exploratory: (i) the sensitivity null (500 contiguous draws), added after the first run, and the earlier per-fill BH correction, which was replaced by BH pooled over all 96 region-by-fill tests to match the registered scope (the masking test has no method dimension); together with the observation that the zero-fill result depends on the null model; (ii) the random-order baseline and the method-to-masking correlation analysis, both added after the first run; (iii) whether age is independently decodable from the frozen features as a possible confound (Ridge $R^2=0.11$); and (iv) fine-tuning the SFCN, which was pre-specified as out of scope and not run. Choices made after inspecting results are flagged as exploratory here and in the project decision log.
 
 \subsection{The five open questions about the original analysis}
 \label{sec:open}
@@ -627,7 +627,7 @@ The following are not part of the registered hypotheses and are reported as expl
 \item \textbf{Coarse explanation grid}, \emph{confirmed}: Grad-CAM resolves to a few blobs on
 the $5\times6\times5$ grid, coarser than named structures.
 \item \textbf{Single region tested}, \emph{a corrected multi-region test is feasible}: it was run.
-Under the registered null, 15 regions pass under zero fill (exploratory) and none under mean fill. Under the
+Under the registered null, 14 regions pass under zero fill (exploratory) and none under mean fill. Under the
 sensitivity null, none passes. This is a different test from the original white-matter-volume $t$-test, so we
 draw no comparison of effect direction or magnitude with \citet{das2024}; the point is only that a multi-region,
 FDR-controlled test can be run where a single region was.
@@ -667,7 +667,7 @@ input perturbations or across random seeds, so claims about reproducibility with
 out of scope. Second, our sanity check uses complete model randomization; we did not perform the
 layer-by-layer cascading randomization of \citet{adebayo2018}, which would localize where in the
 backbone a method's dependence breaks down. Third, the random-order baseline is measured (deletion AUC 0.592, insertion AUC 0.429), not assumed
-to be 0.5; it orders voxels at random, which is a weaker null than a sparsity-matched random map. The registered region test has a $p$ floor of about 0.005 (200 draws), so its 15 zero-fill survivors cannot be ranked. The post-hoc sensitivity analysis (500 draws, floor about 0.002) finds none (Section~\ref{sec:region}). Method-to-masking correlations use the same 48 regions, so they inherit
+to be 0.5; it orders voxels at random, which is a weaker null than a sparsity-matched random map. The registered region test has a $p$ floor of about 0.005 (200 draws), so its 14 zero-fill survivors cannot be ranked. The post-hoc sensitivity analysis (500 draws, floor about 0.002) finds none (Section~\ref{sec:region}). Method-to-masking correlations use the same 48 regions, so they inherit
 spatial autocorrelation. This work validates an explanation
 protocol on an age-group proxy in public controls; it does not speak to alcohol exposure,
 FASD, or the original paper's clinical regions, which require the private PAE data.
@@ -675,7 +675,7 @@ FASD, or the original paper's clinical regions, which require the private PAE da
 \section{Conclusion}
 On a frozen pretrained SFCN, nine explanation methods gave sharply different accounts of what
 the model uses. Faithfulness rankings depended on the perturbation fill and no method was consistently most faithful; Integrated Gradients failed a basic
-sanity check; methods agreed only weakly; and region-level claims were not robust. Under the pre-registered mean-intensity test no region survived correction. The zero-fill check flagged 15 regions under the registered null, but none survived a post-hoc sensitivity null. The practical message for
+sanity check; methods agreed only weakly; and region-level claims were not robust. Under the pre-registered mean-intensity test no region survived correction. The zero-fill check flagged 14 regions under the registered null, but none survived a post-hoc sensitivity null. The practical message for
 neuroimaging XAI is that attribution maps must be validated
 for faithfulness, model-dependence, and anatomical significance, before any of them is
 read as evidence about the brain.
@@ -693,7 +693,7 @@ The author declares no affiliation with the original study and no competing inte
 Data: public Calgary Preschool controls (OSF fork \texttt{5kz2p}, CC-BY 4.0). Code, the
 pre-specified plan, all figures, and the full per-region $p$-value log are in the project
 repository: \url{https://github.com/HoussemDs/brain-xai-faithfulness-audit}. The sensitivity masking
-analysis (merged halves, per-fill FDR, method--masking correlations, region figures) is reproduced by
+analysis (merged halves, pooled FDR, method--masking correlations, region figures) is reproduced by
 \texttt{code/}\allowbreak\texttt{merge\_masking\_halves.py} from the Kaggle outputs, with results in
 \texttt{results\_}\allowbreak\texttt{revised\_null/}. The full pipeline ran on Kaggle (GPU T4~$\times$2,
 $\approx$5.8\,h).
@@ -724,7 +724,7 @@ $\approx$5.8\,h).
 \label{app:regions}
 Every Harvard--Oxford cortical region (48), both fills, both null models. Regions are ordered by zero-fill raw $p$
 under the registered null. Effect is the probability drop on masking (positive = the model depends on the region).
-BH-FDR is over the 48 regions within each fill. The registered null uses 200 random same-size regions (smallest
+BH-FDR is pooled over all 96 region-by-fill tests. The registered null uses 200 random same-size regions (smallest
 attainable $p\approx0.005$). The sensitivity null uses 500 contiguous translated regions (smallest $p\approx0.002$).
 Machine-readable versions:\\
 \texttt{kaggle\_output\_prenatal\_xai\_96/results/region\_masking\_all\_pvalues.csv}\\
@@ -750,54 +750,54 @@ Region & Effect & Raw $p$ & FDR $p$ & Effect & Raw $p$ & FDR $p$ \\
 \endfoot
 \bottomrule
 \endlastfoot
-Insular Cortex & 0.081 & 0.005 & 0.017 & -0.000 & 1.000 & 1.000 \\
-Inferior Temporal Gyrus, temporooccipital part & 0.063 & 0.005 & 0.017 & +0.002 & 0.990 & 1.000 \\
-Subcallosal Cortex & 0.039 & 0.005 & 0.017 & +0.001 & 0.990 & 1.000 \\
-Cingulate Gyrus, anterior division & 0.059 & 0.005 & 0.017 & +0.001 & 1.000 & 1.000 \\
-Cingulate Gyrus, posterior division & 0.057 & 0.005 & 0.017 & +0.000 & 1.000 & 1.000 \\
-Parahippocampal Gyrus, anterior division & 0.057 & 0.005 & 0.017 & +0.001 & 0.995 & 1.000 \\
-Parahippocampal Gyrus, posterior division & 0.069 & 0.005 & 0.017 & +0.001 & 0.985 & 1.000 \\
-Lingual Gyrus & 0.257 & 0.005 & 0.017 & +0.001 & 1.000 & 1.000 \\
-Temporal Fusiform Cortex, posterior division & 0.111 & 0.005 & 0.017 & +0.001 & 1.000 & 1.000 \\
-Occipital Fusiform Gyrus & 0.053 & 0.005 & 0.017 & +0.002 & 1.000 & 1.000 \\
-Frontal Operculum Cortex & 0.035 & 0.005 & 0.017 & +0.000 & 0.990 & 1.000 \\
-Central Opercular Cortex & 0.044 & 0.005 & 0.017 & -0.000 & 1.000 & 1.000 \\
-Parietal Operculum Cortex & 0.043 & 0.005 & 0.017 & +0.001 & 0.995 & 1.000 \\
-Planum Temporale & 0.025 & 0.005 & 0.017 & +0.000 & 1.000 & 1.000 \\
-Supramarginal Gyrus, posterior division & 0.029 & 0.010 & 0.032 & -0.000 & 1.000 & 1.000 \\
-Frontal Medial Cortex & 0.019 & 0.020 & 0.060 & +0.001 & 0.980 & 1.000 \\
-Inferior Temporal Gyrus, posterior division & 0.028 & 0.025 & 0.070 & +0.004 & 0.995 & 1.000 \\
-Superior Temporal Gyrus, posterior division & 0.019 & 0.030 & 0.075 & +0.000 & 0.995 & 1.000 \\
-Paracingulate Gyrus & 0.035 & 0.030 & 0.075 & +0.000 & 1.000 & 1.000 \\
-Intracalcarine Cortex & 0.020 & 0.035 & 0.084 & +0.000 & 1.000 & 1.000 \\
-Middle Frontal Gyrus & 0.045 & 0.045 & 0.098 & +0.007 & 1.000 & 1.000 \\
-Precentral Gyrus & 0.092 & 0.045 & 0.098 & +0.015 & 1.000 & 1.000 \\
-Frontal Orbital Cortex & 0.029 & 0.055 & 0.109 & +0.002 & 1.000 & 1.000 \\
-Temporal Occipital Fusiform Cortex & 0.021 & 0.055 & 0.109 & +0.005 & 0.945 & 1.000 \\
-Middle Temporal Gyrus, posterior division & 0.024 & 0.060 & 0.115 & +0.007 & 0.995 & 1.000 \\
-Lateral Occipital Cortex, inferior division & 0.034 & 0.065 & 0.119 & +0.000 & 1.000 & 1.000 \\
-Inferior Frontal Gyrus, pars triangularis & 0.017 & 0.070 & 0.124 & +0.002 & 0.980 & 1.000 \\
-Temporal Pole & 0.041 & 0.075 & 0.128 & +0.006 & 1.000 & 1.000 \\
-Lateral Occipital Cortex, superior division & 0.064 & 0.080 & 0.132 & +0.010 & 1.000 & 1.000 \\
-Superior Temporal Gyrus, anterior division & 0.012 & 0.090 & 0.143 & +0.000 & 0.990 & 1.000 \\
-Postcentral Gyrus & 0.045 & 0.109 & 0.169 & +0.006 & 1.000 & 1.000 \\
-Superior Frontal Gyrus & 0.036 & 0.129 & 0.188 & +0.011 & 1.000 & 1.000 \\
-Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex) & 0.015 & 0.129 & 0.188 & +0.000 & 1.000 & 1.000 \\
-Supramarginal Gyrus, anterior division & 0.016 & 0.134 & 0.190 & +0.000 & 1.000 & 1.000 \\
-Middle Temporal Gyrus, temporooccipital part & 0.016 & 0.179 & 0.246 & +0.000 & 1.000 & 1.000 \\
-Heschl's Gyrus (includes H1 and H2) & 0.009 & 0.199 & 0.265 & +0.000 & 1.000 & 1.000 \\
-Superior Parietal Lobule & 0.015 & 0.274 & 0.355 & +0.001 & 1.000 & 1.000 \\
-Middle Temporal Gyrus, anterior division & 0.009 & 0.289 & 0.364 & -0.000 & 0.980 & 1.000 \\
-Frontal Pole & 0.044 & 0.338 & 0.416 & +0.018 & 1.000 & 1.000 \\
-Planum Polare & 0.008 & 0.393 & 0.472 & +0.000 & 0.995 & 1.000 \\
-Occipital Pole & 0.016 & 0.408 & 0.478 & +0.002 & 1.000 & 1.000 \\
-Inferior Frontal Gyrus, pars opercularis & 0.010 & 0.433 & 0.489 & +0.001 & 0.990 & 1.000 \\
-Temporal Fusiform Cortex, anterior division & 0.006 & 0.438 & 0.489 & +0.000 & 0.990 & 1.000 \\
-Precuneous Cortex & 0.012 & 0.507 & 0.554 & +0.003 & 1.000 & 1.000 \\
-Angular Gyrus & 0.007 & 0.537 & 0.573 & -0.000 & 1.000 & 1.000 \\
-Cuneal Cortex & 0.006 & 0.562 & 0.587 & +0.000 & 1.000 & 1.000 \\
-Inferior Temporal Gyrus, anterior division & 0.003 & 0.622 & 0.635 & +0.001 & 0.945 & 1.000 \\
-Supracalcarine Cortex & 0.000 & 0.945 & 0.945 & +0.000 & 0.960 & 1.000 \\
+Insular Cortex & 0.081 & 0.005 & 0.034 & -0.000 & 1.000 & 1.000 \\
+Inferior Temporal Gyrus, temporooccipital part & 0.063 & 0.005 & 0.034 & +0.002 & 0.990 & 1.000 \\
+Subcallosal Cortex & 0.039 & 0.005 & 0.034 & +0.001 & 0.990 & 1.000 \\
+Cingulate Gyrus, anterior division & 0.059 & 0.005 & 0.034 & +0.001 & 1.000 & 1.000 \\
+Cingulate Gyrus, posterior division & 0.057 & 0.005 & 0.034 & +0.000 & 1.000 & 1.000 \\
+Parahippocampal Gyrus, anterior division & 0.057 & 0.005 & 0.034 & +0.001 & 0.995 & 1.000 \\
+Parahippocampal Gyrus, posterior division & 0.069 & 0.005 & 0.034 & +0.001 & 0.985 & 1.000 \\
+Lingual Gyrus & 0.257 & 0.005 & 0.034 & +0.001 & 1.000 & 1.000 \\
+Temporal Fusiform Cortex, posterior division & 0.111 & 0.005 & 0.034 & +0.001 & 1.000 & 1.000 \\
+Occipital Fusiform Gyrus & 0.053 & 0.005 & 0.034 & +0.002 & 1.000 & 1.000 \\
+Frontal Operculum Cortex & 0.035 & 0.005 & 0.034 & +0.000 & 0.990 & 1.000 \\
+Central Opercular Cortex & 0.044 & 0.005 & 0.034 & -0.000 & 1.000 & 1.000 \\
+Parietal Operculum Cortex & 0.043 & 0.005 & 0.034 & +0.001 & 0.995 & 1.000 \\
+Planum Temporale & 0.025 & 0.005 & 0.034 & +0.000 & 1.000 & 1.000 \\
+Supramarginal Gyrus, posterior division & 0.029 & 0.010 & 0.064 & -0.000 & 1.000 & 1.000 \\
+Frontal Medial Cortex & 0.019 & 0.020 & 0.119 & +0.001 & 0.980 & 1.000 \\
+Inferior Temporal Gyrus, posterior division & 0.028 & 0.025 & 0.140 & +0.004 & 0.995 & 1.000 \\
+Superior Temporal Gyrus, posterior division & 0.019 & 0.030 & 0.151 & +0.000 & 0.995 & 1.000 \\
+Paracingulate Gyrus & 0.035 & 0.030 & 0.151 & +0.000 & 1.000 & 1.000 \\
+Intracalcarine Cortex & 0.020 & 0.035 & 0.167 & +0.000 & 1.000 & 1.000 \\
+Middle Frontal Gyrus & 0.045 & 0.045 & 0.195 & +0.007 & 1.000 & 1.000 \\
+Precentral Gyrus & 0.092 & 0.045 & 0.195 & +0.015 & 1.000 & 1.000 \\
+Frontal Orbital Cortex & 0.029 & 0.055 & 0.219 & +0.002 & 1.000 & 1.000 \\
+Temporal Occipital Fusiform Cortex & 0.021 & 0.055 & 0.219 & +0.005 & 0.945 & 1.000 \\
+Middle Temporal Gyrus, posterior division & 0.024 & 0.060 & 0.229 & +0.007 & 0.995 & 1.000 \\
+Lateral Occipital Cortex, inferior division & 0.034 & 0.065 & 0.239 & +0.000 & 1.000 & 1.000 \\
+Inferior Frontal Gyrus, pars triangularis & 0.017 & 0.070 & 0.248 & +0.002 & 0.980 & 1.000 \\
+Temporal Pole & 0.041 & 0.075 & 0.256 & +0.006 & 1.000 & 1.000 \\
+Lateral Occipital Cortex, superior division & 0.064 & 0.080 & 0.264 & +0.010 & 1.000 & 1.000 \\
+Superior Temporal Gyrus, anterior division & 0.012 & 0.090 & 0.287 & +0.000 & 0.990 & 1.000 \\
+Postcentral Gyrus & 0.045 & 0.109 & 0.339 & +0.006 & 1.000 & 1.000 \\
+Superior Frontal Gyrus & 0.036 & 0.129 & 0.376 & +0.011 & 1.000 & 1.000 \\
+Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex) & 0.015 & 0.129 & 0.376 & +0.000 & 1.000 & 1.000 \\
+Supramarginal Gyrus, anterior division & 0.016 & 0.134 & 0.379 & +0.000 & 1.000 & 1.000 \\
+Middle Temporal Gyrus, temporooccipital part & 0.016 & 0.179 & 0.491 & +0.000 & 1.000 & 1.000 \\
+Heschl's Gyrus (includes H1 and H2) & 0.009 & 0.199 & 0.531 & +0.000 & 1.000 & 1.000 \\
+Superior Parietal Lobule & 0.015 & 0.274 & 0.710 & +0.001 & 1.000 & 1.000 \\
+Middle Temporal Gyrus, anterior division & 0.009 & 0.289 & 0.729 & -0.000 & 0.980 & 1.000 \\
+Frontal Pole & 0.044 & 0.338 & 0.833 & +0.018 & 1.000 & 1.000 \\
+Planum Polare & 0.008 & 0.393 & 0.943 & +0.000 & 0.995 & 1.000 \\
+Occipital Pole & 0.016 & 0.408 & 0.955 & +0.002 & 1.000 & 1.000 \\
+Inferior Frontal Gyrus, pars opercularis & 0.010 & 0.433 & 0.977 & +0.001 & 0.990 & 1.000 \\
+Temporal Fusiform Cortex, anterior division & 0.006 & 0.438 & 0.977 & +0.000 & 0.990 & 1.000 \\
+Precuneous Cortex & 0.012 & 0.507 & 1.000 & +0.003 & 1.000 & 1.000 \\
+Angular Gyrus & 0.007 & 0.537 & 1.000 & -0.000 & 1.000 & 1.000 \\
+Cuneal Cortex & 0.006 & 0.562 & 1.000 & +0.000 & 1.000 & 1.000 \\
+Inferior Temporal Gyrus, anterior division & 0.003 & 0.622 & 1.000 & +0.001 & 0.945 & 1.000 \\
+Supracalcarine Cortex & 0.000 & 0.945 & 1.000 & +0.000 & 0.960 & 1.000 \\
 \end{longtable}
 
 \vspace{1em}
@@ -820,54 +820,54 @@ Region & Effect & Raw $p$ & FDR $p$ & Effect & Raw $p$ & FDR $p$ \\
 \endfoot
 \bottomrule
 \endlastfoot
-Insular Cortex & 0.081 & 0.445 & 0.726 & -0.000 & 0.972 & 0.996 \\
-Inferior Temporal Gyrus, temporooccipital part & 0.063 & 0.076 & 0.524 & +0.002 & 0.497 & 0.996 \\
-Subcallosal Cortex & 0.039 & 0.152 & 0.524 & +0.001 & 0.581 & 0.996 \\
-Cingulate Gyrus, anterior division & 0.059 & 0.058 & 0.524 & +0.001 & 0.830 & 0.996 \\
-Cingulate Gyrus, posterior division & 0.057 & 0.112 & 0.524 & +0.000 & 0.876 & 0.996 \\
-Parahippocampal Gyrus, anterior division & 0.057 & 0.345 & 0.686 & +0.001 & 0.786 & 0.996 \\
-Parahippocampal Gyrus, posterior division & 0.069 & 0.182 & 0.524 & +0.001 & 0.679 & 0.996 \\
-Lingual Gyrus & 0.257 & 0.002 & 0.096 & +0.001 & 0.912 & 0.996 \\
-Temporal Fusiform Cortex, posterior division & 0.111 & 0.242 & 0.635 & +0.001 & 0.898 & 0.996 \\
-Occipital Fusiform Gyrus & 0.053 & 0.186 & 0.524 & +0.002 & 0.571 & 0.996 \\
-Frontal Operculum Cortex & 0.035 & 0.158 & 0.524 & +0.000 & 0.778 & 0.996 \\
-Central Opercular Cortex & 0.044 & 0.112 & 0.524 & -0.000 & 0.950 & 0.996 \\
-Parietal Operculum Cortex & 0.043 & 0.024 & 0.524 & +0.001 & 0.741 & 0.996 \\
-Planum Temporale & 0.025 & 0.086 & 0.524 & +0.000 & 0.956 & 0.996 \\
-Supramarginal Gyrus, posterior division & 0.029 & 0.178 & 0.524 & -0.000 & 0.972 & 0.996 \\
-Frontal Medial Cortex & 0.019 & 0.092 & 0.524 & +0.001 & 0.752 & 0.996 \\
-Inferior Temporal Gyrus, posterior division & 0.028 & 0.357 & 0.686 & +0.004 & 0.425 & 0.996 \\
-Superior Temporal Gyrus, posterior division & 0.019 & 0.094 & 0.524 & +0.000 & 0.956 & 0.996 \\
-Paracingulate Gyrus & 0.035 & 0.152 & 0.524 & +0.000 & 0.952 & 0.996 \\
-Intracalcarine Cortex & 0.020 & 0.485 & 0.728 & +0.000 & 0.934 & 0.996 \\
-Middle Frontal Gyrus & 0.045 & 0.160 & 0.524 & +0.007 & 0.248 & 0.996 \\
-Precentral Gyrus & 0.092 & 0.772 & 0.843 & +0.015 & 0.186 & 0.996 \\
-Frontal Orbital Cortex & 0.029 & 0.469 & 0.726 & +0.002 & 0.882 & 0.996 \\
-Temporal Occipital Fusiform Cortex & 0.021 & 0.501 & 0.729 & +0.005 & 0.295 & 0.996 \\
-Middle Temporal Gyrus, posterior division & 0.024 & 0.289 & 0.662 & +0.007 & 0.218 & 0.996 \\
-Lateral Occipital Cortex, inferior division & 0.034 & 0.373 & 0.689 & +0.000 & 0.974 & 0.996 \\
-Inferior Frontal Gyrus, pars triangularis & 0.017 & 0.265 & 0.637 & +0.002 & 0.593 & 0.996 \\
-Temporal Pole & 0.041 & 0.463 & 0.726 & +0.006 & 0.623 & 0.996 \\
-Lateral Occipital Cortex, superior division & 0.064 & 0.571 & 0.756 & +0.010 & 0.271 & 0.996 \\
-Superior Temporal Gyrus, anterior division & 0.012 & 0.327 & 0.683 & +0.000 & 0.894 & 0.996 \\
-Postcentral Gyrus & 0.045 & 0.711 & 0.837 & +0.006 & 0.411 & 0.996 \\
-Superior Frontal Gyrus & 0.036 & 0.251 & 0.635 & +0.011 & 0.206 & 0.996 \\
-Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex) & 0.015 & 0.465 & 0.726 & +0.000 & 0.894 & 0.996 \\
-Supramarginal Gyrus, anterior division & 0.016 & 0.309 & 0.675 & +0.000 & 0.960 & 0.996 \\
-Middle Temporal Gyrus, temporooccipital part & 0.016 & 0.561 & 0.756 & +0.000 & 0.996 & 0.996 \\
-Heschl's Gyrus (includes H1 and H2) & 0.009 & 0.463 & 0.726 & +0.000 & 0.888 & 0.996 \\
-Superior Parietal Lobule & 0.015 & 0.758 & 0.843 & +0.001 & 0.790 & 0.996 \\
-Middle Temporal Gyrus, anterior division & 0.009 & 0.579 & 0.756 & -0.000 & 0.886 & 0.996 \\
-Frontal Pole & 0.044 & 0.112 & 0.524 & +0.018 & 0.890 & 0.996 \\
-Planum Polare & 0.008 & 0.583 & 0.756 & +0.000 & 0.834 & 0.996 \\
-Occipital Pole & 0.016 & 0.715 & 0.837 & +0.002 & 0.669 & 0.996 \\
-Inferior Frontal Gyrus, pars opercularis & 0.010 & 0.615 & 0.777 & +0.001 & 0.743 & 0.996 \\
-Temporal Fusiform Cortex, anterior division & 0.006 & 0.890 & 0.909 & +0.000 & 0.890 & 0.996 \\
-Precuneous Cortex & 0.012 & 0.745 & 0.843 & +0.003 & 0.671 & 0.996 \\
-Angular Gyrus & 0.007 & 0.715 & 0.837 & -0.000 & 0.994 & 0.996 \\
-Cuneal Cortex & 0.006 & 0.810 & 0.864 & +0.000 & 0.918 & 0.996 \\
-Inferior Temporal Gyrus, anterior division & 0.003 & 0.876 & 0.909 & +0.001 & 0.735 & 0.996 \\
-Supracalcarine Cortex & 0.000 & 0.990 & 0.990 & +0.000 & 0.749 & 0.996 \\
+Insular Cortex & 0.081 & 0.445 & 0.996 & -0.000 & 0.972 & 0.996 \\
+Inferior Temporal Gyrus, temporooccipital part & 0.063 & 0.076 & 0.990 & +0.002 & 0.497 & 0.996 \\
+Subcallosal Cortex & 0.039 & 0.152 & 0.990 & +0.001 & 0.581 & 0.996 \\
+Cingulate Gyrus, anterior division & 0.059 & 0.058 & 0.990 & +0.001 & 0.830 & 0.996 \\
+Cingulate Gyrus, posterior division & 0.057 & 0.112 & 0.990 & +0.000 & 0.876 & 0.996 \\
+Parahippocampal Gyrus, anterior division & 0.057 & 0.345 & 0.996 & +0.001 & 0.786 & 0.996 \\
+Parahippocampal Gyrus, posterior division & 0.069 & 0.182 & 0.990 & +0.001 & 0.679 & 0.996 \\
+Lingual Gyrus & 0.257 & 0.002 & 0.192 & +0.001 & 0.912 & 0.996 \\
+Temporal Fusiform Cortex, posterior division & 0.111 & 0.242 & 0.996 & +0.001 & 0.898 & 0.996 \\
+Occipital Fusiform Gyrus & 0.053 & 0.186 & 0.990 & +0.002 & 0.571 & 0.996 \\
+Frontal Operculum Cortex & 0.035 & 0.158 & 0.990 & +0.000 & 0.778 & 0.996 \\
+Central Opercular Cortex & 0.044 & 0.112 & 0.990 & -0.000 & 0.950 & 0.996 \\
+Parietal Operculum Cortex & 0.043 & 0.024 & 0.990 & +0.001 & 0.741 & 0.996 \\
+Planum Temporale & 0.025 & 0.086 & 0.990 & +0.000 & 0.956 & 0.996 \\
+Supramarginal Gyrus, posterior division & 0.029 & 0.178 & 0.990 & -0.000 & 0.972 & 0.996 \\
+Frontal Medial Cortex & 0.019 & 0.092 & 0.990 & +0.001 & 0.752 & 0.996 \\
+Inferior Temporal Gyrus, posterior division & 0.028 & 0.357 & 0.996 & +0.004 & 0.425 & 0.996 \\
+Superior Temporal Gyrus, posterior division & 0.019 & 0.094 & 0.990 & +0.000 & 0.956 & 0.996 \\
+Paracingulate Gyrus & 0.035 & 0.152 & 0.990 & +0.000 & 0.952 & 0.996 \\
+Intracalcarine Cortex & 0.020 & 0.485 & 0.996 & +0.000 & 0.934 & 0.996 \\
+Middle Frontal Gyrus & 0.045 & 0.160 & 0.990 & +0.007 & 0.248 & 0.996 \\
+Precentral Gyrus & 0.092 & 0.772 & 0.996 & +0.015 & 0.186 & 0.990 \\
+Frontal Orbital Cortex & 0.029 & 0.469 & 0.996 & +0.002 & 0.882 & 0.996 \\
+Temporal Occipital Fusiform Cortex & 0.021 & 0.501 & 0.996 & +0.005 & 0.295 & 0.996 \\
+Middle Temporal Gyrus, posterior division & 0.024 & 0.289 & 0.996 & +0.007 & 0.218 & 0.996 \\
+Lateral Occipital Cortex, inferior division & 0.034 & 0.373 & 0.996 & +0.000 & 0.974 & 0.996 \\
+Inferior Frontal Gyrus, pars triangularis & 0.017 & 0.265 & 0.996 & +0.002 & 0.593 & 0.996 \\
+Temporal Pole & 0.041 & 0.463 & 0.996 & +0.006 & 0.623 & 0.996 \\
+Lateral Occipital Cortex, superior division & 0.064 & 0.571 & 0.996 & +0.010 & 0.271 & 0.996 \\
+Superior Temporal Gyrus, anterior division & 0.012 & 0.327 & 0.996 & +0.000 & 0.894 & 0.996 \\
+Postcentral Gyrus & 0.045 & 0.711 & 0.996 & +0.006 & 0.411 & 0.996 \\
+Superior Frontal Gyrus & 0.036 & 0.251 & 0.996 & +0.011 & 0.206 & 0.996 \\
+Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex) & 0.015 & 0.465 & 0.996 & +0.000 & 0.894 & 0.996 \\
+Supramarginal Gyrus, anterior division & 0.016 & 0.309 & 0.996 & +0.000 & 0.960 & 0.996 \\
+Middle Temporal Gyrus, temporooccipital part & 0.016 & 0.561 & 0.996 & +0.000 & 0.996 & 0.996 \\
+Heschl's Gyrus (includes H1 and H2) & 0.009 & 0.463 & 0.996 & +0.000 & 0.888 & 0.996 \\
+Superior Parietal Lobule & 0.015 & 0.758 & 0.996 & +0.001 & 0.790 & 0.996 \\
+Middle Temporal Gyrus, anterior division & 0.009 & 0.579 & 0.996 & -0.000 & 0.886 & 0.996 \\
+Frontal Pole & 0.044 & 0.112 & 0.990 & +0.018 & 0.890 & 0.996 \\
+Planum Polare & 0.008 & 0.583 & 0.996 & +0.000 & 0.834 & 0.996 \\
+Occipital Pole & 0.016 & 0.715 & 0.996 & +0.002 & 0.669 & 0.996 \\
+Inferior Frontal Gyrus, pars opercularis & 0.010 & 0.615 & 0.996 & +0.001 & 0.743 & 0.996 \\
+Temporal Fusiform Cortex, anterior division & 0.006 & 0.890 & 0.996 & +0.000 & 0.890 & 0.996 \\
+Precuneous Cortex & 0.012 & 0.745 & 0.996 & +0.003 & 0.671 & 0.996 \\
+Angular Gyrus & 0.007 & 0.715 & 0.996 & -0.000 & 0.994 & 0.996 \\
+Cuneal Cortex & 0.006 & 0.810 & 0.996 & +0.000 & 0.918 & 0.996 \\
+Inferior Temporal Gyrus, anterior division & 0.003 & 0.876 & 0.996 & +0.001 & 0.735 & 0.996 \\
+Supracalcarine Cortex & 0.000 & 0.990 & 0.996 & +0.000 & 0.749 & 0.996 \\
 \end{longtable}
 
 }

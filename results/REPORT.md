@@ -11,7 +11,7 @@ figure here is reproduced from the committed `results/` and `results_revised_nul
 
 **Region test, two analyses.** The pre-registered region test (200 random same-size regions) is the
 primary analysis. Under the mean-intensity fill no region survives correction. The zero-fill check, also
-pre-registered, flags 15 regions, all at the null's p-value floor. After the first run we added a post-hoc
+pre-registered, flags 14 regions, all at the null's p-value floor. After the first run we added a post-hoc
 sensitivity analysis (500 contiguous translated regions, merged over both Kaggle halves). It finds no region
 under either fill, so the zero-fill result is not robust to the null model.
 
@@ -22,7 +22,7 @@ sharply. Occlusion-based ReX (M9) is by far the most faithful, and Grad-CAM on t
 is the least. Eight of nine methods pass the randomized-weight sanity check, but **Integrated
 Gradients (M4) fails it**: its maps are driven by the input, not the model. Methods agree only
 weakly with each other (mean pairwise Spearman 0.36). **Under the pre-registered mean-intensity test no
-cortical region survives correction.** The zero-fill check flags 15 regions under the registered null, but
+cortical region survives correction.** The zero-fill check flags 14 regions under the registered null, but
 none under the post-hoc sensitivity null. Method-to-masking agreement is weak for every method.
 
 The value of this study is the **method verdict**, not the classifier's accuracy. It says nothing
@@ -177,38 +177,37 @@ early Grad-CAM (r = -0.54). Which "important regions" you report depends heavily
 ## 8. Region test
 
 Harvard-Oxford cortical regions (48), each tested by masking the region and recording the drop in
-predicted-class probability. Two-sided p-values, Benjamini-Hochberg at q = 0.05 applied within each fill over
-the 48 regions. Both Kaggle halves (REGION_HALF = 0 and 1) were merged before correction.
+predicted-class probability. Two-sided p-values, Benjamini-Hochberg at q = 0.05 applied across all 96 region-by-fill tests
+(48 regions under each fill). Both Kaggle halves (REGION_HALF = 0 and 1) were merged before correction.
 
 **Registered analysis (primary).** Null: 200 random same-size regions (smallest attainable p about 0.005).
-Mean-intensity fill: **no region survives** (smallest raw p = 0.945). Zero fill (registered as a check): **15
+Mean-intensity fill: **no region survives** (smallest raw p = 0.945). Zero fill (registered as a check): **14
 regions survive**, all at the p floor, so the correction cannot rank them. Full log:
 [`region_masking_all_pvalues.csv`](region_masking_all_pvalues.csv) (in `kaggle_output_prenatal_xai_96/results/`).
 
 | Region (zero fill, registered null) | Effect | n voxels | Raw p | FDR p |
 |---|---|---|---|---|
-| Lingual Gyrus | 0.257 | 26,880 | 0.005 | 0.017 |
-| Temporal Fusiform Cortex, posterior division | 0.111 | 12,680 | 0.005 | 0.017 |
-| Insular Cortex | 0.081 | 21,449 | 0.005 | 0.017 |
-| Parahippocampal Gyrus, posterior division | 0.069 | 5,698 | 0.005 | 0.017 |
-| Inferior Temporal Gyrus, temporooccipital part | 0.063 | 11,973 | 0.005 | 0.017 |
-| Cingulate Gyrus, anterior division | 0.059 | 20,844 | 0.005 | 0.017 |
-| Parahippocampal Gyrus, anterior division | 0.057 | 9,956 | 0.005 | 0.017 |
-| Cingulate Gyrus, posterior division | 0.057 | 19,228 | 0.005 | 0.017 |
-| Occipital Fusiform Gyrus | 0.053 | 14,538 | 0.005 | 0.017 |
-| Central Opercular Cortex | 0.044 | 14,953 | 0.005 | 0.017 |
-| Parietal Operculum Cortex | 0.043 | 8,739 | 0.005 | 0.017 |
-| Subcallosal Cortex | 0.039 | 9,021 | 0.005 | 0.017 |
-| Frontal Operculum Cortex | 0.035 | 5,313 | 0.005 | 0.017 |
-| Supramarginal Gyrus, posterior division | 0.029 | 18,720 | 0.010 | 0.032 |
-| Planum Temporale | 0.025 | 8,032 | 0.005 | 0.017 |
+| Lingual Gyrus | 0.257 | 26,880 | 0.005 | 0.034 |
+| Temporal Fusiform Cortex, posterior division | 0.111 | 12,680 | 0.005 | 0.034 |
+| Insular Cortex | 0.081 | 21,449 | 0.005 | 0.034 |
+| Parahippocampal Gyrus, posterior division | 0.069 | 5,698 | 0.005 | 0.034 |
+| Inferior Temporal Gyrus, temporooccipital part | 0.063 | 11,973 | 0.005 | 0.034 |
+| Cingulate Gyrus, anterior division | 0.059 | 20,844 | 0.005 | 0.034 |
+| Parahippocampal Gyrus, anterior division | 0.057 | 9,956 | 0.005 | 0.034 |
+| Cingulate Gyrus, posterior division | 0.057 | 19,228 | 0.005 | 0.034 |
+| Occipital Fusiform Gyrus | 0.053 | 14,538 | 0.005 | 0.034 |
+| Central Opercular Cortex | 0.044 | 14,953 | 0.005 | 0.034 |
+| Parietal Operculum Cortex | 0.043 | 8,739 | 0.005 | 0.034 |
+| Subcallosal Cortex | 0.039 | 9,021 | 0.005 | 0.034 |
+| Frontal Operculum Cortex | 0.035 | 5,313 | 0.005 | 0.034 |
+| Planum Temporale | 0.025 | 8,032 | 0.005 | 0.034 |
 
-All fifteen are also in Appendix B of the paper.
+All fourteen are also in Appendix B of the paper.
 
 **Sensitivity analysis (post-hoc).** Null: 500 same-size regions drawn as contiguous translations of the real mask
 inside gray matter (smallest attainable p about 0.002). Added after the first run, because every mean-fill p-value
 under the registered null sat near 1 and the scattered null is poorly matched to region shape. **No region survives
-under either fill.** Zero fill: smallest FDR p = 0.096 (Lingual Gyrus, raw p = 0.002). Mean fill: smallest raw p = 0.186.
+under either fill.** Zero fill: smallest FDR p = 0.192 (Lingual Gyrus, raw p = 0.002). Mean fill: smallest raw p = 0.186.
 Full log: [`../results_revised_null/region_masking_merged.csv`](../results_revised_null/region_masking_merged.csv).
 
 **Interpretation.** The zero-fill result depends on the null model, and zero blanking is out of distribution.
@@ -254,7 +253,7 @@ One representative scan across all nine methods, illustrating the resolution and
 | # | Hypothesis | Verdict |
 |---|---|---|
 | H1 | Grad-CAM coarser than IG/SmoothGrad | Supported on blob count (M1 about 3, M2 about 13, SmoothGrad about 19,000, IG about 42,000). Top-5% mass does not discriminate cleanly, so the claim rests on blob count. |
-| H2 | Large regions survive correction more than small named structures (pons, CC) | Not testable with a confirmatory result: no region survives BH q = 0.05 under the registered mean-fill test; the 15 zero-fill survivors of the registered null do not survive the sensitivity null. |
+| H2 | Large regions survive correction more than small named structures (pons, CC) | Not testable with a confirmatory result: no region survives BH q = 0.05 under the registered mean-fill test; the 14 zero-fill survivors of the registered null do not survive the sensitivity null. |
 | H3 | IG & SmoothGrad correlate more with each other than with Grad-CAM | Supported descriptively. IG-SmoothGrad r = 0.80, IG-M1 r = 0.34, SmoothGrad-M1 r = 0.28. No formal dependent-correlation test run. |
 | H4 | At least one method differs trained vs randomized (sanity) | Supported. Most methods differ; M4 Integrated Gradients weakest (r = 0.73). |
 | H5 | block6 probe > block2 probe | Not supported. block2 0.624 vs block6 0.635, within the CV SD (0.12). |
@@ -272,7 +271,7 @@ From plan section 2, each marked against what this public-data study can show:
 1. **The 5x6x5 explanation grid is coarser than the named structures.** *Confirmed.* Grad-CAM maps
    resolve to a handful of blobs on the 5x6x5 grid (section 6), coarser than regions such as the corpus
    callosum or pons.
-2. **Only one named region was tested, and not significantly.** *Run.* A multi-region test with FDR control was run. Under the registered null, 15 regions pass under zero
+2. **Only one named region was tested, and not significantly.** *Run.* A multi-region test with FDR control was run. Under the registered null, 14 regions pass under zero
    fill (exploratory) and none under mean fill. Under the post-hoc sensitivity null, none passes. The paper's single white-matter test (t = -0.73, p = 0.47) is a different
    test, so no direct comparison of effects is drawn.
 3. **Possible site / recruitment confound.** *Not testable.* PAE scans are not public.
@@ -286,7 +285,7 @@ From plan section 2, each marked against what this public-data study can show:
 
 - n = 96; a single proxy task; one cortical atlas; no PAE data; the pretrained-weights source is not
   author-confirmed.
-- The registered region test (200 random regions) has a p floor of about 0.005, so its 15 zero-fill survivors
+- The registered region test (200 random regions) has a p floor of about 0.005, so its 14 zero-fill survivors
   cannot be ranked. The sensitivity null (500 contiguous draws, added after the first run; plan section 9, A1)
   has a floor of about 0.002 and finds none.
 - The random-order baseline is a random voxel ordering, which is a weaker null than a sparsity-matched

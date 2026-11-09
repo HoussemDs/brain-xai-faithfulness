@@ -32,7 +32,7 @@ why a validation step is needed before any map is read anatomically.*
 | **Faithful?** (do the flagged voxels drive the output) | **Depends on the perturbation fill.** Under zero fill ReX has the lowest deletion AUC (0.14); under in-distribution mean fill ReX scores worst on both deletion and insertion (0.88 / 0.30), and under blur fill Guided Backprop leads. No method is claimed to be most faithful. |
 | **Model-driven, not input-driven?** | 8 of 9 pass a randomized-weight sanity check; **Integrated Gradients fails** (Spearman **r = 0.73** between trained and random model). |
 | **Consistent across methods?** | Weak: mean pairwise region-level Spearman **0.36**; the two Grad-CAM variants are anti-correlated. |
-| **Anatomically valid?** | Under the pre-registered mean-intensity test, **no cortical region survives FDR**. The zero-fill check flags 15 regions under the registered null, all at its p floor; a post-hoc sensitivity null (500 contiguous draws) finds none in either fill. Method-to-masking agreement is weak (every correlation is at most 0.19 in absolute value). |
+| **Anatomically valid?** | Under the pre-registered mean-intensity test, **no cortical region survives FDR**. The zero-fill check flags 14 regions under the registered null, all at its p floor; a post-hoc sensitivity null (500 contiguous draws) finds none in either fill. Method-to-masking agreement is weak (every correlation is at most 0.19 in absolute value). |
 
 The deliverable is the **method verdict and a reusable protocol**, not a diagnostic classifier.
 The proxy head is intentionally modest (~64% CV accuracy) — accuracy is not the point.
@@ -66,7 +66,7 @@ reinitialized, so its map is input-driven.*
 | Path | Contents |
 |---|---|
 | `paper/` | Manuscript (`.tex`, `.pdf`), figures, and `references.bib` |
-| `results_revised_null/` | Revised region test (merged halves, per-fill FDR), method-to-masking correlations, academic-account faithfulness re-run |
+| `results_revised_null/` | Revised region test (merged halves, pooled FDR), method-to-masking correlations, academic-account faithfulness re-run |
 | `docs/prenatal_xai_plan.md` | Pre-specified protocol and decision log |
 | `notebooks/prenatal_xai_prep.ipynb` | Preprocessing: download, registration, frozen SFCN feature extraction |
 | `notebooks/prenatal_xai_kaggle.ipynb` | Main analysis: classifier + nine attribution methods + metrics |
@@ -76,7 +76,7 @@ reinitialized, so its map is input-driven.*
 | `code/run_all_methods.py` | Attribution methods M1–M9 |
 | `code/rex_3d.py` | M9: 3D ReX occlusion-responsibility on the 5×6×5 grid |
 | `code/eval_metrics.py` | Faithfulness, sanity check, bootstrap CIs, permutation, Benjamini–Hochberg |
-| `code/merge_masking_halves.py` | Merges the two region-masking halves, recomputes per-fill BH-FDR, method-to-masking correlations, and the revised figure |
+| `code/merge_masking_halves.py` | Merges the two region-masking halves, recomputes pooled BH-FDR over all 96 region-by-fill tests, method-to-masking correlations, and the revised figure |
 | `code/fetch_osf_scans.py`, `fetch_extra_scans.py` | Two-pass cohort loader (handles the ID-hyphenation mismatch) |
 | `results/` | REPORT, figures, cohort table, full per-region p-value log |
 

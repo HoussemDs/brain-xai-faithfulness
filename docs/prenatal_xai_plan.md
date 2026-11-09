@@ -138,15 +138,15 @@ and exploratory analyses").
 
 | ID | Registered | Changed to | Why | Effect on results |
 |---|---|---|---|---|
-| A1 | Not registered as a change. The registered null (200 random same-size regions, section 7) stays the primary test. | Added a sensitivity null: 500 random regions drawn as contiguous translations of the real mask inside gray matter | Added after the first run, because every mean-fill p-value under the registered null sat near 1 and the scattered null is poorly matched to region shape | Registered null: mean fill 0 survive; zero fill (check) 15 survive, all at the p floor. Sensitivity null: 0 survive in either fill |
-| A2 | BH across all method-by-region tests (section 7) | BH recomputed per fill over the 48 regions, after merging the two Kaggle halves | The two halves were run in parallel (REGION_HALF=0 and 1); per-half correction over 24 regions is superseded | Sensitivity null, merged: zero-fill minimum FDR p = 0.096 (Lingual Gyrus) |
+| A1 | Not registered as a change. The registered null (200 random same-size regions, section 7) stays the primary test. | Added a sensitivity null: 500 random regions drawn as contiguous translations of the real mask inside gray matter | Added after the first run, because every mean-fill p-value under the registered null sat near 1 and the scattered null is poorly matched to region shape | Registered null: mean fill 0 survive; zero fill (check) 14 survive, all at the p floor. Sensitivity null: 0 survive in either fill |
+| A2 | BH across all method-by-region tests (section 7) | BH recomputed pooled over all 96 region-by-fill tests (the masking test has no method dimension), after merging the two Kaggle halves | The two halves were run in parallel (REGION_HALF=0 and 1); per-half and per-fill (48-region) corrections are superseded | Sensitivity null, merged: zero-fill minimum FDR p = 0.192 (Lingual Gyrus) |
 | A3 | Not registered | Random-order baseline for deletion/insertion AUC | The 0.5 chance value assumed in the first draft was not measured | Deletion 0.592 (SD 0.189), insertion 0.429 (SD 0.311) |
 | A4 | Not registered | Method-to-masking Spearman (48 regions), permutation p | Tests whether any method's regions track the model's masking dependence | Every absolute rho is at most 0.19; none significant; spatially autocorrelated, so p is optimistic |
 | A5 | Insertion CI and paired test not registered | Insertion bootstrap CI by child; paired ReX minus Guided Backprop bootstrap | Insertion was reported as a mean only; the claim needed a test | Difference 0.014, CI [-0.047, 0.072], p = 0.65 |
 | A6 | Classifier permutation test (1,000) run in every run | Skipped in the masking runs (N_PERM_ACC = 0) | Compute budget; the permutation result is taken from the original run | Permutation p = 0.01 (original run) |
 
 Consequence for the registered hypotheses: H2 cannot be tested with a confirmatory result. Under the
-registered mean-fill test no region survives correction, and the 15 zero-fill survivors of the registered null
+registered mean-fill test no region survives correction, and the 14 zero-fill survivors of the registered null
 do not survive the sensitivity null. The H1 blob counts are unchanged (Grad-CAM final about 3, early about 13, SmoothGrad
 about 19,000, Integrated Gradients about 42,000).
 
