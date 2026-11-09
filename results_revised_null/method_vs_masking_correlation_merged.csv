@@ -1,0 +1,10 @@
+method,spearman_attr_vs_masking,perm_p_two_sided
+M1_gradcam_final,0.189,0.2037
+M2_gradcam_early,-0.036,0.8055
+M3_saliency,0.089,0.5457
+M4_integrated_gradients,0.121,0.4096
+M5_smoothgrad,-0.007,0.9580
+M6_vargrad,0.022,0.8866
+M7_lrp,0.159,0.2862
+M8_guided_backprop,0.040,0.7854
+M9_rex_exploratory,0.175,0.2370

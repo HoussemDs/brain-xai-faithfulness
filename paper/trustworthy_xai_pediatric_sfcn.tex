@@ -6,6 +6,7 @@
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{amsmath}
 \usepackage{siunitx}
 \usepackage{caption}
@@ -15,6 +16,7 @@
 \usepackage[round]{natbib}
 \usepackage{xcolor}
 \usepackage{enumitem}
+\usepackage{longtable}
 
 \graphicspath{{figures/}}
 \captionsetup{font=small,labelfont=bf}
@@ -42,16 +44,17 @@ classifiers, yet they are rarely validated before being believed. We audit nine 
 methods on a frozen pretrained Simple Fully Convolutional Network (SFCN), a brain-age model,
 using an age-group proxy task on 96 children from the public Calgary Preschool control cohort.
 The study makes no claim about prenatal alcohol exposure; it asks which explanations are
-faithful to the model, agree with one another, and yield region-level claims that survive
-multiple-comparison correction. Occlusion-based ReX was the most faithful (deletion AUC 0.14
-vs.\ 0.53--0.78 for the rest) and early-block Grad-CAM the least. Eight of nine methods passed
+faithful to the model, agree with one another only weakly, and whether region-level claims survive
+multiple-comparison correction. Under the pre-registered mean-intensity fill, none do. The faithfulness ranking depends on the perturbation fill. Under zero fill, occlusion-based ReX has the lowest deletion AUC (0.14 vs.\ 0.53--0.78), but under in-distribution mean-intensity fill it scores worst on both deletion and insertion, and under blur fill Guided Backprop leads on insertion. Eight of nine methods passed
 a randomized-weight sanity check; Integrated Gradients did not (Spearman $r=0.73$ between
 trained and random models), indicating input-driven rather than model-driven maps. Methods
 agreed only weakly (mean pairwise Spearman 0.36), and the two Grad-CAM variants were
-anti-correlated. A corrected region-masking test identified 15 cortical regions under an
-exploratory zero-fill, but none under the pre-specified mean-intensity fill, so this positive
-result is post-hoc and fill-dependent. Method choice materially changes the regions one would
-report, and occlusion-based faithfulness and randomized-weight sanity checks should be routine.
+anti-correlated. The pre-registered region test (200 random same-size regions) found no cortical
+region under the mean-intensity fill. Under zero fill it flagged 15 regions, all at the null's
+$p$-value floor. A post-hoc sensitivity analysis with a 500-draw contiguous null found no region under
+either fill, so the zero-fill result is not robust to the choice of null. Method-to-masking agreement
+was weak (Spearman $-0.04$ to $0.19$). Method choice materially changes which explanations look faithful,
+and occlusion-based faithfulness and randomized-weight sanity checks should be routine.
 The contribution is a reusable validation protocol, not a diagnostic classifier.
 \end{abstract}
 
@@ -86,8 +89,7 @@ Our contributions are: (i) a pre-specified, multi-method validation protocol for
 attribution combining faithfulness, randomized-weight sanity checks, resolution, cross-method
 agreement, and a corrected anatomical region test; (ii) an empirical verdict over nine
 methods on a real neuroimaging backbone; and (iii) a public, reproducible pipeline. The
-headline finding is that \emph{method choice is not a detail}: faithfulness spans a factor of
-five across methods, one widely used method (Integrated Gradients) fails the sanity check,
+headline finding is that \emph{method choice is not a detail}: under zero fill faithfulness spans a factor of five across methods, and the ranking changes with the fill, one widely used method (Integrated Gradients) fails the sanity check,
 and methods agree only weakly on which regions matter.
 
 The paper follows the three questions as a spine. We answer \emph{faithful?} with deletion
@@ -102,7 +104,7 @@ multiple-comparison-corrected region-masking test (Section~\ref{sec:region}); re
 \subsection{Attribution methods and why they must be validated}
 Attribution methods assign each input voxel a score for how much it drove a prediction, but
 they compute that score in very different ways, and the differences matter for what a map can
-be trusted to show. \emph{Gradient} methods (Saliency, Integrated Gradients
+be trusted to show. \emph{Gradient} methods (Saliency \citep{simonyan2014}, Integrated Gradients
 \citep{sundararajan2017}, SmoothGrad \citep{smilkov2017}, VarGrad \citep{adebayo2018}) read
 the sensitivity of the output to each voxel and so produce voxel-resolution but often noisy
 maps. \emph{Class-activation} methods (Grad-CAM \citep{selvaraju2017}) weight the network's
@@ -139,9 +141,9 @@ approach to prenatal alcohol exposure and its clinical framing, is theirs; our c
 is the validation protocol applied to the same backbone on public data. It is not an audit of
 their clinical conclusion, which we cannot access, and every use we make of their design is
 cited as such. We
-identify six open questions about the original analysis (coarse explanation grid,
-single-region testing, site/recruitment confound, age confound, child-level leakage from
-repeated scans, and a scan-count-versus-child-count clarification), listed here and then stated and revisited one by one in
+identify five open questions about the original analysis (coarse explanation grid,
+single-region testing, site/recruitment confound, age confound, and child-level leakage from
+repeated scans), listed here and then stated and revisited one by one in
 Section~\ref{sec:open} to the extent the public data allow. The complete preregistered protocol (\href{https://osf.io/jycnr}{OSF \texttt{jycnr}}) accompanies this work in the project repository.
 
 \section{Methods}
@@ -150,7 +152,7 @@ Section~\ref{sec:open} to the extent the public data allow. The complete preregi
 We use the public Calgary Preschool control cohort \citep{reynolds2020} (OSF fork
 \texttt{5kz2p}, CC-BY 4.0), restricted to the 96 children who carry a demographic label and a
 usable T1 scan, one scan per child. The public release is longitudinal and lists multiple
-visits per child, so its total T1 count exceeds the number of children; we take one scan per
+visits per child; its T1 sheet lists 279 scans for these 96 children. We take one scan per
 child, which removes child-level leakage. Cohort
 demographics are in Table~\ref{tab:cohort}. The proxy task is age dichotomized at the cohort
 median (3.64 y): 48 older (label 1), 48 younger (label 0), a perfectly balanced
@@ -239,14 +241,14 @@ the paragraphs that follow give the detail.
 \caption{What each metric measures, the question it answers, and what counts as a pass.}
 \label{tab:metrics}
 \small
-\begin{tabular}{p{2.6cm}p{4.2cm}p{5.2cm}}
+\begin{tabular}{>{\raggedright}p{2.6cm}>{\raggedright}p{4.2cm}>{\raggedright\arraybackslash}p{5.2cm}}
 \toprule
 Metric & Question answered & Pass / reading \\
 \midrule
 Faithfulness & Do the highlighted voxels drive the output? & Low deletion AUC, high insertion AUC \\
 Sanity & Is the map model-driven, not input-driven? & $|r|<0.3$ between trained and random model \\
 Agreement & Do independent methods agree on regions? & High pairwise region-level $r$ \\
-Region test & Which regions is the \emph{model} sensitive to, under correction? & Survives BH-FDR $q=0.05$ vs.\ random-region null \\
+Region test & Which regions is the \emph{model} sensitive to, under correction? & Survives BH-FDR $q=0.05$ vs.\ the registered random-region null (200 draws) \\
 Resolution & Is the map fine enough to name a structure? & Supporting: top-5\% mass, blob count \\
 Classifier / probe & Is the proxy signal real (not noise)? & Supporting: above-chance CV, permutation $p$ \\
 \bottomrule
@@ -287,14 +289,16 @@ map}: for each Harvard--Oxford cortical region \citep{desikan2006,makris2006} we
 region's voxels and record the drop in predicted-class probability. A large drop means the
 model relied on that region. This is why it is a masking test on model output, not an
 attribution test; it validates the model's regional dependence directly, so it can confirm
-or refute what the maps claim. Significance is against a null of 200 random same-size regions,
-with Benjamini--Hochberg correction at $q=0.05$ \citep{benjamini1995}. We run two fills,
-mean-intensity and zero; because every effect reported below is fill-dependent (only the zero
-fill yields any significant region), the results and Table~\ref{tab:regions} report the
-zero-fill effect, with the mean-fill outcome given alongside.
+or refute what the maps claim. Significance is tested against the pre-registered null of 200 random same-size regions,
+with Benjamini--Hochberg correction at $q=0.05$ \citep{benjamini1995} applied within each fill over the
+48 regions. The primary fill is mean-intensity, as registered; zero fill was registered as a check. The
+smallest attainable $p$ under this null is $1/201\approx0.005$. In addition to the registered 200 draws, we ran a
+post-hoc sensitivity analysis with 500 same-size regions drawn as translations of the real mask inside gray matter (a contiguous
+null, smallest attainable $p$ of $1/501\approx0.002$). This analysis is exploratory and is listed in Section~\ref{sec:deviations}. We report both
+analyses and treat neither as confirmatory for the zero-fill result.
 
 \textbf{Resolution (supporting).} Fraction of attribution mass in the top 5\% of voxels, and
-blob count, how localized a map is, hence whether it is fine enough to name a structure.
+blob count, how localized a map is, hence whether it is fine enough to name a structure. Blob count is the number of 6-connected components among voxels whose absolute attribution is at or above the map's 95th percentile. It measures fragmentation, not blob size.
 
 \textbf{Uncertainty and significance.} 95\% bootstrap CIs (10{,}000 resamples, resampled by
 child) on every metric. The classifier check is a repeated (10$\times$) stratified 5-fold CV
@@ -309,7 +313,7 @@ $p$-values; tests run after seeing the data are flagged exploratory in the pre-s
 The head need only learn the proxy well enough to make attributions meaningful; its accuracy
 is not a scientific claim. Cross-validated accuracy was $0.643\pm0.120$ over 50 fits
 (sensitivity 0.632, specificity 0.668), and a linear probe on the frozen features reached
-0.635 (permutation $p=0.01$). The proxy is decodable above chance but only modestly
+0.635 (permutation $p=0.01$, 1{,}000 permutations; this test comes from the original run, since the revised masking runs set $N_{\mathrm{perm}}=0$ and skipped it). The proxy is decodable above chance but only modestly
 (Fig.~\ref{fig:classifier}).
 
 \begin{figure}[H]
@@ -321,36 +325,70 @@ is not a scientific claim. Cross-validated accuracy was $0.643\pm0.120$ over 50 
 
 \subsection{Faithfulness}
 \label{sec:faith}
-Addressing question~1 (do the highlighted voxels drive the output?), ReX (M9) is clearly the
-most faithful method: deletion AUC 0.141 ([0.119, 0.165]) against 0.53--0.78 for the rest. This
-advantage is partly by construction and we state it plainly: ReX searches for regions whose
-removal changes the prediction, and deletion AUC scores exactly that property, so the two are
-not independent. The insertion AUC (0.755), a criterion ReX does not optimize, points the same
-way and is the less circular evidence that its voxels drive the output. Only the extremes are
-individually separable: ReX at the top, and LRP (M7) and early-block Grad-CAM (M2) at the
-bottom. The five mid-ranked methods (Integrated
-Gradients, Guided Backprop, SmoothGrad, Saliency, VarGrad) have heavily overlapping bootstrap
-CIs and should be read as a tie, not a rank order. The paper's method (M1) is middling, and
-early-block Grad-CAM (M2) is the worst of the nine (Table~\ref{tab:faith},
-Fig.~\ref{fig:faith}).
+Addressing question~1 (do the highlighted voxels drive the output?), the answer depends on the
+perturbation fill (Table~\ref{tab:fills}, Appendix~\ref{app:fills}). Under zero fill, ReX (M9) has the lowest
+deletion AUC (0.141 [0.119, 0.165], against 0.53--0.78 for the rest), with a near-tie with Guided Backprop on
+insertion. This advantage is partly by construction, since ReX searches for regions whose removal changes the
+prediction and deletion scores exactly that. Zero blanking is also out of distribution, so the zero-fill ranking
+may reflect the model's response to blanking rather than faithfulness. Under the in-distribution mean-intensity
+fill, ReX has the highest deletion AUC (0.877) and the lowest insertion AUC (0.295); the paired ReX-minus-Guided-Backprop
+insertion difference is $-0.195$ [$-0.265$, $-0.126$]. Under the blur fill, Guided Backprop has the lowest deletion AUC
+(0.753) and the highest insertion AUC (0.882), and the paired insertion difference is $-0.370$ [$-0.429$, $-0.311$]. Early-block
+Grad-CAM (M2) has the highest deletion AUC under zero and blur fills. We therefore make no claim that any method is
+the most faithful. The three fills agree only that deletion and insertion rankings are not stable across fills.
+The random-order baseline also depends on the fill (deletion 0.592, 0.680 and 0.948 for zero, mean and blur), so
+deletion AUC is not a fill-independent reference scale. Fig.~\ref{fig:faith} shows the zero-fill comparison.
 
 \begin{table}[H]
 \centering
-\caption{Faithfulness. Deletion AUC (lower is better) with 95\% bootstrap CI; insertion AUC.}
-\label{tab:faith}
-\begin{tabular}{lccc}
+\caption{Faithfulness under three fills. Deletion AUC (lower is better) and insertion AUC (higher is better), all 96
+children, same frozen model. Zero fill is the earlier registered-check fill; mean and blur fills were added after the
+first run (plan section 10). Zero-fill values match the earlier run to within 0.001. The random-order baseline is
+measured per fill.}
+\label{tab:fills}
+\small
+\begin{tabular}{lrrrrrr}
 \toprule
-Method & Deletion AUC & 95\% CI & Insertion AUC \\
+& \multicolumn{3}{c}{Deletion AUC} & \multicolumn{3}{c}{Insertion AUC} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Method & Zero & Mean & Blur & Zero & Mean & Blur \\
 \midrule
-M9 ReX & \textbf{0.141} & [0.119, 0.165] & 0.755 \\
-M4 Integrated Gradients & 0.528 & [0.475, 0.584] & 0.512 \\
-M8 Guided Backprop & 0.556 & [0.489, 0.624] & 0.742 \\
-M5 SmoothGrad & 0.556 & [0.502, 0.609] & 0.537 \\
-M3 Saliency & 0.568 & [0.518, 0.619] & 0.490 \\
-M6 VarGrad & 0.580 & [0.531, 0.628] & 0.501 \\
-M1 Grad-CAM (final) & 0.644 & [0.601, 0.687] & 0.501 \\
-M7 LRP & 0.674 & [0.627, 0.720] & 0.598 \\
-M2 Grad-CAM (early) & \textbf{0.777} & [0.730, 0.822] & 0.488 \\
+M1 Grad-CAM (final) & 0.644 & 0.737 & 0.860 & 0.501 & 0.541 & 0.614 \\
+M2 Grad-CAM (early) & 0.777 & 0.788 & 0.952 & 0.488 & 0.462 & 0.562 \\
+M3 Saliency & 0.567 & 0.708 & 0.800 & 0.490 & 0.458 & 0.690 \\
+M4 Integrated Gradients & 0.528 & 0.604 & 0.861 & 0.513 & 0.500 & 0.605 \\
+M5 SmoothGrad & 0.556 & 0.665 & 0.794 & 0.538 & 0.488 & 0.677 \\
+M6 VarGrad & 0.580 & 0.710 & 0.821 & 0.501 & 0.497 & 0.638 \\
+M7 LRP & 0.674 & 0.789 & 0.861 & 0.598 & 0.527 & 0.602 \\
+M8 Guided Backprop & 0.556 & 0.818 & 0.753 & 0.742 & 0.490 & 0.882 \\
+M9 ReX & 0.141 & 0.877 & 0.845 & 0.755 & 0.295 & 0.512 \\
+\midrule
+Random order (baseline) & 0.592 & 0.680 & 0.948 & 0.429 & 0.500 & 0.573 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Faithfulness. Deletion AUC (lower is better) and insertion AUC (higher is better), each with 95\%
+bootstrap CI by child (10{,}000 resamples). Insertion CIs and the random-order baseline come from the
+academic-account re-run of the faithfulness stage; its insertion values differ from the first run by at most 0.001.}
+\label{tab:faith}
+\begin{tabular}{lcccc}
+\toprule
+Method & Deletion AUC & 95\% CI & Insertion AUC & 95\% CI \\
+\midrule
+M9 ReX & \textbf{0.141} & [0.119, 0.165] & 0.755 & [0.713, 0.793] \\
+M4 Integrated Gradients & 0.528 & [0.475, 0.584] & 0.513 & [0.479, 0.548] \\
+M8 Guided Backprop & 0.556 & [0.489, 0.624] & 0.742 & [0.701, 0.780] \\
+M5 SmoothGrad & 0.556 & [0.502, 0.609] & 0.538 & [0.486, 0.589] \\
+M3 Saliency & 0.568 & [0.518, 0.619] & 0.490 & [0.438, 0.543] \\
+M6 VarGrad & 0.580 & [0.531, 0.628] & 0.501 & [0.440, 0.560] \\
+M1 Grad-CAM (final) & 0.644 & [0.601, 0.687] & 0.501 & [0.471, 0.532] \\
+M7 LRP & 0.674 & [0.627, 0.720] & 0.598 & [0.529, 0.665] \\
+M2 Grad-CAM (early) & \textbf{0.777} & [0.730, 0.822] & 0.488 & [0.477, 0.499] \\
+\midrule
+Random order (baseline) & 0.592 (SD 0.189) & -- & 0.429 (SD 0.311) & -- \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -397,7 +435,7 @@ on the metric that matters, with a near-chance deletion AUC (0.556).
 \toprule
 Method & Spearman (trained vs.\ random) & Verdict \\
 \midrule
-M2 Grad-CAM (early) & $-0.242$ & PASS (model-dependent) \\
+M2 Grad-CAM (early) & $-0.242$ & PASS \\
 M9 ReX & 0.019 & PASS \\
 M1 Grad-CAM (final) & 0.121 & PASS \\
 M3 Saliency & 0.141 & PASS \\
@@ -420,7 +458,7 @@ M7 LRP & 0.255 & PASS \\
 \subsection{Resolution}
 \label{sec:res}
 The two methods that operate on the $5\times6\times5$ feature grid, final-block Grad-CAM (M1)
-and ReX (M9), produce only about three large blobs each; in Fig.~\ref{fig:resolution} their
+and ReX (M9), produce only about three to four large blobs each; in Fig.~\ref{fig:resolution} their
 blob counts sit near zero against a scale dominated by the voxel-level methods, which fragment
 into thousands of small blobs (SmoothGrad $\approx$19{,}000, Saliency $\approx$44{,}000). The
 near-zero bars for M1 and M9 are therefore expected, not a plotting error: coarse grid-level
@@ -431,7 +469,7 @@ analysis, namely that the explanation grid is coarser than many named structures
 \centering
 \includegraphics[width=0.85\linewidth]{12_resolution.png}
 \caption{Resolution: top-5\% attribution mass and blob count per method. Grid-level methods
-(M1 Grad-CAM final, M9 ReX) show $\approx$3 blobs, appearing near zero on the voxel-level
+(M1 Grad-CAM final, M9 ReX) show $\approx$3--4 blobs, appearing near zero on the voxel-level
 scale; this is inherent to the $5\times6\times5$ grid, not an artifact.}
 \label{fig:resolution}
 \end{figure}
@@ -439,11 +477,12 @@ scale; this is inherent to the $5\times6\times5$ grid, not an artifact.}
 \subsection{Cross-method agreement}
 \label{sec:agree}
 \begin{sloppypar}
-Mean pairwise region-level Spearman correlation is only 0.36 (Fig.~\ref{fig:agreement}). The
+Mean pairwise region-level Spearman correlation over the 36 method pairs is only 0.36 (Fig.~\ref{fig:agreement}). The
 gradient family (M3/M5/M6) agrees strongly among itself, with pairwise $r$ reaching 0.96 at the
 top of its range (reported as the maximum, not a typical value), but the two Grad-CAM variants
-are anti-correlated ($r=-0.61$), and ReX and LRP sit largely on their own. Which regions one
-reports depends heavily on the method chosen.
+are anti-correlated ($r=-0.61$). ReX correlates most with final-block Grad-CAM ($r=0.56$) and is
+anti-correlated with early-block Grad-CAM ($r=-0.54$). Which regions one reports depends heavily on
+the method chosen.
 \end{sloppypar}
 
 \begin{figure}[H]
@@ -455,64 +494,87 @@ reports depends heavily on the method chosen.
 
 \subsection{Anatomical region test}
 \label{sec:region}
-Under an exploratory zero-fill (a post-hoc deviation from the pre-specified mean-intensity
-fill; see Section~\ref{sec:deviations}), fifteen cortical regions survive Benjamini--Hochberg
-correction at $q=0.05$ (Table~\ref{tab:regions}, Fig.~\ref{fig:regions}); the Lingual Gyrus
-carries the largest effect. The pre-specified result is the opposite: under the mean-intensity
-fill no region survives correction (smallest raw $p=0.95$). That $p=0.95$ is expected, not
-anomalous: the test is two-sided on the magnitude of the probability drop, and under the
-mean-intensity fill every region's observed drop is near zero and smaller than almost all
-same-size random-region drops, so mean-intensity replacement is too gentle a perturbation to
-expose regional dependence, not evidence that the regions are unimportant. The zero fill has
-the opposite caveat: blanking a region to zero is itself out of distribution, so part of its
-larger effect may reflect how much signal is removed rather than the region's specific
-importance. The same-size random-region null absorbs the gross ``how much brain'' component,
-but not the out-of-distribution character of a zero patch. The surviving regions should
-therefore be read as significant for zero-region deletion specifically, an exploratory finding,
-not a fill-robust anatomical claim. The
-informative column is the effect size, not the FDR $p$: with a null of 200 random regions the
-smallest attainable corrected $p$ is a floor (hence the repeated $0.017$), so the $p$ column
-separates ``survives'' from ``does not'' but does not rank the regions. The full per-region
-log (both fills, raw and corrected $p$) is released as
-\texttt{results/region\_masking\_all\_pvalues.csv}.
+\textbf{Registered analysis.} Under the mean-intensity fill, no region survives correction at $q=0.05$
+(smallest raw $p=0.945$). Under the zero-fill check, fifteen regions survive (Table~\ref{tab:registered}).
+Fourteen have raw $p=0.005$ and one has $p=0.010$, at or near the smallest attainable under the 200-draw null,
+so the correction cannot rank them. Their FDR values sit at a floor (0.017 for fourteen, 0.032 for one).
+
+\textbf{Sensitivity analysis.} Under the 500-draw contiguous null, no region survives under either fill
+(Table~\ref{tab:regions}). Under zero fill the smallest FDR $p$ is 0.096 (Lingual Gyrus, raw $p=0.002$). Under
+mean fill the smallest raw $p$ is 0.19. The same masking effects are used in both analyses, so the
+method-to-masking correlations below do not depend on the null.
+
+\textbf{Interpretation.} The zero-fill result depends on the null model: it is significant under the registered
+null and not under the sensitivity null. Zero blanking is also out of distribution, so part of any zero-fill
+effect may reflect how much signal is removed rather than the region's specific importance. The mean-fill effects
+are near zero and not significant under either null. We therefore make no robust anatomical claim.
+
+\textbf{Method-to-masking agreement.} For each method we correlated its mean absolute attribution per region
+(48 regions) with the zero-fill masking effect (Spearman; permutation $p$ from 10{,}000 shuffles of the masking
+effect). Correlations range from $-0.04$ (M2) to $+0.19$ (M1), with $p$ from $0.20$ to $0.96$
+(\texttt{results\_}\allowbreak\texttt{revised\_null/method\_vs\_masking\_correlation\_merged.csv}). The 48 regions are
+spatially autocorrelated, so these $p$-values are optimistic. No method's region ranking tracks the model's masking
+dependence, so we claim no anatomical validity for any method.
 
 \begin{table}[H]
 \centering
-\caption{The 15 cortical regions surviving BH-FDR $q=0.05$ under zero-fill masking. Effect is
-the zero-fill masking effect size (probability drop); $n$ is region voxel count. The FDR $p$
-is at the floor set by the 200-region null (see text), so effect size, not $p$, orders the
-regions. No region survives under the mean-intensity fill.}
+\caption{Regions surviving BH-FDR $q=0.05$ under the registered null (200 random regions), zero fill. This is an
+exploratory check: zero fill was registered as a check, not the primary fill. Effect is the probability drop on
+masking. All fifteen sit at the null's $p$ floor, so the correction cannot rank them.}
+\label{tab:registered}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+Region & Effect & $n$ voxels & Raw $p$ & FDR $p$ \\
+\midrule
+Lingual Gyrus & 0.257 & 26{,}880 & 0.005 & 0.017 \\
+Temporal Fusiform Cortex{,} posterior division & 0.111 & 12{,}680 & 0.005 & 0.017 \\
+Insular Cortex & 0.081 & 21{,}449 & 0.005 & 0.017 \\
+Parahippocampal Gyrus{,} posterior division & 0.069 & 5{,}698 & 0.005 & 0.017 \\
+Inferior Temporal Gyrus{,} temporooccipital part & 0.063 & 11{,}973 & 0.005 & 0.017 \\
+Cingulate Gyrus{,} anterior division & 0.059 & 20{,}844 & 0.005 & 0.017 \\
+Parahippocampal Gyrus{,} anterior division & 0.057 & 9{,}956 & 0.005 & 0.017 \\
+Cingulate Gyrus{,} posterior division & 0.057 & 19{,}228 & 0.005 & 0.017 \\
+Occipital Fusiform Gyrus & 0.053 & 14{,}538 & 0.005 & 0.017 \\
+Central Opercular Cortex & 0.044 & 14{,}953 & 0.005 & 0.017 \\
+Parietal Operculum Cortex & 0.043 & 8{,}739 & 0.005 & 0.017 \\
+Subcallosal Cortex & 0.039 & 9{,}021 & 0.005 & 0.017 \\
+Frontal Operculum Cortex & 0.035 & 5{,}313 & 0.005 & 0.017 \\
+Supramarginal Gyrus{,} posterior division & 0.029 & 18{,}720 & 0.010 & 0.032 \\
+Planum Temporale & 0.025 & 8{,}032 & 0.005 & 0.017 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Sensitivity analysis: region masking under the 500-draw contiguous null, merged over both halves;
+BH-FDR over all 48 regions within each fill. Top five zero-fill and top three mean-fill regions by raw $p$.
+None survives $q=0.05$. Effect is the probability drop on masking; $n$ is region voxel count.}
 \label{tab:regions}
 \small
-\begin{tabular}{lrrr}
+\begin{tabular}{llrrrr}
 \toprule
-Region & Effect & $n$ voxels & FDR $p$ \\
+Fill & Region & Effect & $n$ voxels & Raw $p$ & FDR $p$ \\
 \midrule
-Lingual Gyrus & 0.257 & 26{,}880 & 0.017 \\
-Temporal Fusiform Cortex, posterior div. & 0.111 & 12{,}680 & 0.017 \\
-Insular Cortex & 0.081 & 21{,}449 & 0.017 \\
-Parahippocampal Gyrus, posterior div. & 0.069 & 5{,}698 & 0.017 \\
-Inferior Temporal Gyrus, temporooccipital & 0.063 & 11{,}973 & 0.017 \\
-Cingulate Gyrus, anterior div. & 0.059 & 20{,}844 & 0.017 \\
-Parahippocampal Gyrus, anterior div. & 0.057 & 9{,}956 & 0.017 \\
-Cingulate Gyrus, posterior div. & 0.057 & 19{,}228 & 0.017 \\
-Occipital Fusiform Gyrus & 0.053 & 14{,}538 & 0.017 \\
-Central Opercular Cortex & 0.044 & 14{,}953 & 0.017 \\
-Parietal Operculum Cortex & 0.043 & 8{,}739 & 0.017 \\
-Subcallosal Cortex & 0.039 & 9{,}021 & 0.017 \\
-Frontal Operculum Cortex & 0.035 & 5{,}313 & 0.017 \\
-Supramarginal Gyrus, posterior div. & 0.029 & 18{,}720 & 0.032 \\
-Planum Temporale & 0.025 & 8{,}032 & 0.017 \\
+zero & Lingual Gyrus & 0.257 & 26{,}880 & 0.002 & 0.096 \\
+zero & Parietal Operculum Cortex & 0.043 & 8{,}739 & 0.024 & 0.524 \\
+zero & Cingulate Gyrus, anterior div. & 0.059 & 20{,}844 & 0.058 & 0.524 \\
+zero & Inferior Temporal Gyrus, temporooccipital & 0.063 & 11{,}973 & 0.076 & 0.524 \\
+zero & Planum Temporale & 0.025 & 8{,}032 & 0.086 & 0.524 \\
+mean & Precentral Gyrus & 0.015 & 70{,}031 & 0.186 & 0.996 \\
+mean & Superior Frontal Gyrus & 0.011 & 45{,}246 & 0.206 & 0.996 \\
+mean & Middle Temporal Gyrus, posterior div. & 0.007 & 21{,}879 & 0.218 & 0.996 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.85\linewidth]{10_region_masking.png}
-\caption{Region masking test (zero fill) against a random-region null: zero-fill masking
-effect size vs.\ $-\log_{10}$ FDR $p$. Red points survive BH-FDR $q=0.05$. The $x$-axis
-matches the effect column of Table~\ref{tab:regions}.}
+\includegraphics[width=0.95\linewidth]{10_region_nulls.png}
+\caption{Region masking under the registered null (top, 200 random regions) and the sensitivity null (bottom,
+500 contiguous draws), mean fill (left) and zero fill (right). Masking effect vs.\ $-\log_{10}$ FDR $p$ (BH over
+48 regions per fill). Dashed line marks $q=0.05$; red points survive within their fill.}
 \label{fig:regions}
 \end{figure}
 
@@ -543,9 +605,9 @@ Figs.~\ref{fig:resolution} and \ref{fig:agreement} are visible here.}
 \subsection{Pre-specified hypotheses}
 Results are reported against the six hypotheses exactly as registered (OSF \texttt{jycnr}).
 
-\textbf{H1} (Grad-CAM produces smoother, coarser maps than Integrated Gradients and SmoothGrad): \emph{supported on blob count, mixed on mass}. Both Grad-CAM variants resolve to only $\approx$3 connected blobs, versus tens of thousands for Integrated Gradients and SmoothGrad (Fig.~\ref{fig:resolution}); this blob-count gap is the unambiguous evidence for ``coarser.'' Top-5\% attribution mass does not discriminate cleanly: early-block Grad-CAM (M2) carries the lowest mass, but final-block Grad-CAM (M1, $\approx$0.30) is \emph{more} concentrated than SmoothGrad ($\approx$0.19), so we rest the claim on blob count rather than mass.
+\textbf{H1} (Grad-CAM produces smoother, coarser maps than Integrated Gradients and SmoothGrad): \emph{supported on blob count, mixed on mass}. Final-block Grad-CAM resolves to $\approx$3 connected blobs and early-block Grad-CAM to $\approx$13, versus $\approx$19{,}000 for SmoothGrad and $\approx$42{,}000 for Integrated Gradients (Fig.~\ref{fig:resolution}); this blob-count gap is the unambiguous evidence for ``coarser.'' Top-5\% attribution mass does not discriminate cleanly: early-block Grad-CAM (M2) carries the lowest mass, but final-block Grad-CAM (M1, $\approx$0.30) is \emph{more} concentrated than SmoothGrad ($\approx$0.19), so we rest the claim on blob count rather than mass.
 
-\textbf{H2} (large anatomical regions are more likely to survive correction than small named structures such as the pons and corpus callosum): \emph{not supported}; under the pre-specified mean-intensity fill no region survived BH-FDR ($q=0.05$), so the large-versus-small contrast could not be tested; a zero-fill sensitivity check yielded 15 surviving regions, confirming the region test is fill-dependent.
+\textbf{H2} (large anatomical regions are more likely to survive correction than small named structures such as the pons and corpus callosum): \emph{not testable}; under the registered mean-intensity test no region survives BH-FDR ($q=0.05$), and the 15 zero-fill survivors of the registered null do not survive the sensitivity null (Section~\ref{sec:region}), so the large-versus-small contrast cannot be tested with a confirmatory result.
 
 \textbf{H3} (Integrated Gradients and SmoothGrad correlate more with each other than either does with final-block Grad-CAM): \emph{supported descriptively}; mean pairwise region-level Spearman is 0.36, and the gradient family (including IG and SmoothGrad) agrees internally (up to $r=0.96$) while Grad-CAM sits apart. This is reported descriptively; no formal test of the difference between dependent correlations was pre-specified or run.
 
@@ -557,36 +619,28 @@ Results are reported against the six hypotheses exactly as registered (OSF \text
 
 \subsection{Deviations and exploratory analyses}
 \label{sec:deviations}
-The following are not part of the registered hypotheses and are reported as exploratory: (i) the count of regions surviving correction and its dependence on the masking fill, an elaboration of H2; (ii) whether age is independently decodable from the frozen features as a possible confound (Ridge $R^2=0.11$); and (iii) fine-tuning the SFCN, which was pre-specified as out of scope and not run. Choices made after inspecting results are flagged as exploratory here and in the project decision log.
+The following are not part of the registered hypotheses and are reported as exploratory: (i) the sensitivity null (500 contiguous draws), added after the first run, and the per-fill BH correction over 48 regions (the registered plan specifies BH across all method-by-region tests), together with the observation that the zero-fill result depends on the null model; (ii) the random-order baseline and the method-to-masking correlation analysis, both added after the first run; (iii) whether age is independently decodable from the frozen features as a possible confound (Ridge $R^2=0.11$); and (iv) fine-tuning the SFCN, which was pre-specified as out of scope and not run. Choices made after inspecting results are flagged as exploratory here and in the project decision log.
 
-\subsection{The six open questions about the original analysis}
+\subsection{The five open questions about the original analysis}
 \label{sec:open}
 \begin{enumerate}[leftmargin=1.6em]
 \item \textbf{Coarse explanation grid}, \emph{confirmed}: Grad-CAM resolves to a few blobs on
 the $5\times6\times5$ grid, coarser than named structures.
-\item \textbf{Single region tested}, \emph{a corrected multi-region test is feasible}: it
-finds 15 regions under zero-fill masking (none under mean-fill). This is a
-different test from the original white-matter-volume $t$-test, not a like-for-like correction
-of it, so we draw no comparison of effect direction or magnitude with \citet{das2024}; the
-point is only that a multi-region, FDR-controlled test can be run where a single region was.
+\item \textbf{Single region tested}, \emph{a corrected multi-region test is feasible}: it was run.
+Under the registered null, 15 regions pass under zero fill (exploratory) and none under mean fill. Under the
+sensitivity null, none passes. This is a different test from the original white-matter-volume $t$-test, so we
+draw no comparison of effect direction or magnitude with \citet{das2024}; the point is only that a multi-region,
+FDR-controlled test can be run where a single region was.
 \item \textbf{Site/recruitment confound}, \emph{not testable}: PAE scans are not public.
 \item \textbf{Age confound}, \emph{partially testable}: age is weakly decodable from the frozen
 features ($R^2=0.11$); a plausible confound worth controlling.
 \item \textbf{Child-level leakage}, \emph{addressed by design}: one scan per child and
 child-grouped CV.
-\item \textbf{Scan count vs.\ child count}, \emph{a clarification of our own $n$, not a
-criticism of the original study}: the public release is longitudinal and lists multiple visits
-per child. Our reading of that release is that its total T1 count therefore exceeds the number
-of unique children (by our count on the order of 279 scans against 96 children), though this
-scan total is our inference from the public visit structure, not a figure stated by
-\citet{das2024}. We include it only to explain why our analysis is child-level ($n=96$, one
-scan each); we make no claim that any count in the original work is incorrect.
 \end{enumerate}
 
 \subsection{What this means in practice}
 Method choice materially changes the reported ``important regions.'' Three practices follow,
-one per framing question: for faithfulness, report occlusion-based deletion/insertion rather
-than trusting a map's appearance; for model-dependence, run a randomized-weight sanity check
+one per framing question: for faithfulness, report deletion and insertion under more than one perturbation fill, since rankings change with the fill; for model-dependence, run a randomized-weight sanity check
 and discard methods that fail it (here, Integrated Gradients); and for anatomical validity,
 never report a single method's regions without a corrected statistical test.
 
@@ -596,8 +650,8 @@ $n=96$; a single proxy task; one cortical atlas; and no PAE data. One caution fo
 native-space design justified in the Methods: the adult Harvard--Oxford atlas reaches the
 preschool brains through affine-only registration, so for children aged 2.6--6.9\,y the region
 identities in Table~\ref{tab:regions} are approximate anatomical labels, and the
-anatomical-validity claim holds at the resolution of the masking test rather than of individual
-gyri. Age-appropriate pediatric templates and nonlinear registration would sharpen the labels
+anatomical-validity question is answered as ``not established'' at the resolution of the masking
+test, not for individual gyri. Age-appropriate pediatric templates and nonlinear registration would sharpen the labels
 \citep{fonov2011} but would invalidate the frozen features, so the trade-off is deliberate, not
 an oversight. The backbone weights are the
 public UK~Biobank brain-age release of \citet{peng2021} \citep{sfcnweights}; we report the
@@ -612,19 +666,16 @@ not true map \emph{stability}: we did not quantify how a single method's map var
 input perturbations or across random seeds, so claims about reproducibility within a method are
 out of scope. Second, our sanity check uses complete model randomization; we did not perform the
 layer-by-layer cascading randomization of \citet{adebayo2018}, which would localize where in the
-backbone a method's dependence breaks down. Third, we report the method ranking against the observed spread of deletion AUCs rather than
-against an explicit random-attribution floor; a random-map baseline (expected deletion AUC near
-0.5) would further anchor the weak methods but is not required for the comparative ranking
-reported here. This work validates an explanation
+backbone a method's dependence breaks down. Third, the random-order baseline is measured (deletion AUC 0.592, insertion AUC 0.429), not assumed
+to be 0.5; it orders voxels at random, which is a weaker null than a sparsity-matched random map. The registered region test has a $p$ floor of about 0.005 (200 draws), so its 15 zero-fill survivors cannot be ranked. The post-hoc sensitivity analysis (500 draws, floor about 0.002) finds none (Section~\ref{sec:region}). Method-to-masking correlations use the same 48 regions, so they inherit
+spatial autocorrelation. This work validates an explanation
 protocol on an age-group proxy in public controls; it does not speak to alcohol exposure,
 FASD, or the original paper's clinical regions, which require the private PAE data.
 
 \section{Conclusion}
 On a frozen pretrained SFCN, nine explanation methods gave sharply different accounts of what
-the model uses. Occlusion-based ReX was the most faithful; Integrated Gradients failed a basic
-sanity check; methods agreed only weakly; and a corrected masking test isolated 15 cortical
-regions under an exploratory zero-fill, but none under the pre-specified mean-intensity fill,
-so that positive result is post-hoc. The practical message for
+the model uses. Faithfulness rankings depended on the perturbation fill and no method was consistently most faithful; Integrated Gradients failed a basic
+sanity check; methods agreed only weakly; and region-level claims were not robust. Under the pre-registered mean-intensity test no region survived correction. The zero-fill check flagged 15 regions under the registered null, but none survived a post-hoc sensitivity null. The practical message for
 neuroimaging XAI is that attribution maps must be validated
 for faithfulness, model-dependence, and anatomical significance, before any of them is
 read as evidence about the brain.
@@ -638,10 +689,14 @@ control cohort under CC-BY 4.0, and \citet{peng2021} for the public SFCN brain-a
 The author declares no affiliation with the original study and no competing interests.
 
 \section*{Reproducibility}
+\sloppy
 Data: public Calgary Preschool controls (OSF fork \texttt{5kz2p}, CC-BY 4.0). Code, the
 pre-specified plan, all figures, and the full per-region $p$-value log are in the project
-repository: \url{https://github.com/HoussemDs/brain-xai-faithfulness-audit}. The full pipeline
-ran on Kaggle (GPU T4~$\times$2, $\approx$5.8\,h).
+repository: \url{https://github.com/HoussemDs/brain-xai-faithfulness-audit}. The sensitivity masking
+analysis (merged halves, per-fill FDR, method--masking correlations, region figures) is reproduced by
+\texttt{code/}\allowbreak\texttt{merge\_masking\_halves.py} from the Kaggle outputs, with results in
+\texttt{results\_}\allowbreak\texttt{revised\_null/}. The full pipeline ran on Kaggle (GPU T4~$\times$2,
+$\approx$5.8\,h).
 
 \bibliographystyle{plainnat}
 \bibliography{references}
@@ -662,5 +717,241 @@ ran on Kaggle (GPU T4~$\times$2, $\approx$5.8\,h).
 \end{subfigure}
 \caption{Cohort and quality control.}
 \end{figure}
+
+
+
+\section{Full region-masking results}
+\label{app:regions}
+Every Harvard--Oxford cortical region (48), both fills, both null models. Regions are ordered by zero-fill raw $p$
+under the registered null. Effect is the probability drop on masking (positive = the model depends on the region).
+BH-FDR is over the 48 regions within each fill. The registered null uses 200 random same-size regions (smallest
+attainable $p\approx0.005$). The sensitivity null uses 500 contiguous translated regions (smallest $p\approx0.002$).
+Machine-readable versions:\\
+\texttt{kaggle\_output\_prenatal\_xai\_96/results/region\_masking\_all\_pvalues.csv}\\
+\texttt{results\_revised\_null/region\_masking\_merged.csv}.
+
+{\small
+\begin{longtable}{>{\raggedright\arraybackslash}p{6.4cm}rrrrrr}
+\caption{Full region-masking results under the registered null (200 random regions).}\label{tab:fullreg}\\
+\toprule
+& \multicolumn{3}{c}{Zero fill} & \multicolumn{3}{c}{Mean fill} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Region & Effect & Raw $p$ & FDR $p$ & Effect & Raw $p$ & FDR $p$ \\
+\midrule
+\endfirsthead
+\toprule
+& \multicolumn{3}{c}{Zero fill} & \multicolumn{3}{c}{Mean fill} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Region & Effect & Raw $p$ & FDR $p$ & Effect & Raw $p$ & FDR $p$ \\
+\midrule
+\endhead
+\midrule
+\multicolumn{7}{r}{\emph{continued on next page}}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Insular Cortex & 0.081 & 0.005 & 0.017 & -0.000 & 1.000 & 1.000 \\
+Inferior Temporal Gyrus, temporooccipital part & 0.063 & 0.005 & 0.017 & +0.002 & 0.990 & 1.000 \\
+Subcallosal Cortex & 0.039 & 0.005 & 0.017 & +0.001 & 0.990 & 1.000 \\
+Cingulate Gyrus, anterior division & 0.059 & 0.005 & 0.017 & +0.001 & 1.000 & 1.000 \\
+Cingulate Gyrus, posterior division & 0.057 & 0.005 & 0.017 & +0.000 & 1.000 & 1.000 \\
+Parahippocampal Gyrus, anterior division & 0.057 & 0.005 & 0.017 & +0.001 & 0.995 & 1.000 \\
+Parahippocampal Gyrus, posterior division & 0.069 & 0.005 & 0.017 & +0.001 & 0.985 & 1.000 \\
+Lingual Gyrus & 0.257 & 0.005 & 0.017 & +0.001 & 1.000 & 1.000 \\
+Temporal Fusiform Cortex, posterior division & 0.111 & 0.005 & 0.017 & +0.001 & 1.000 & 1.000 \\
+Occipital Fusiform Gyrus & 0.053 & 0.005 & 0.017 & +0.002 & 1.000 & 1.000 \\
+Frontal Operculum Cortex & 0.035 & 0.005 & 0.017 & +0.000 & 0.990 & 1.000 \\
+Central Opercular Cortex & 0.044 & 0.005 & 0.017 & -0.000 & 1.000 & 1.000 \\
+Parietal Operculum Cortex & 0.043 & 0.005 & 0.017 & +0.001 & 0.995 & 1.000 \\
+Planum Temporale & 0.025 & 0.005 & 0.017 & +0.000 & 1.000 & 1.000 \\
+Supramarginal Gyrus, posterior division & 0.029 & 0.010 & 0.032 & -0.000 & 1.000 & 1.000 \\
+Frontal Medial Cortex & 0.019 & 0.020 & 0.060 & +0.001 & 0.980 & 1.000 \\
+Inferior Temporal Gyrus, posterior division & 0.028 & 0.025 & 0.070 & +0.004 & 0.995 & 1.000 \\
+Superior Temporal Gyrus, posterior division & 0.019 & 0.030 & 0.075 & +0.000 & 0.995 & 1.000 \\
+Paracingulate Gyrus & 0.035 & 0.030 & 0.075 & +0.000 & 1.000 & 1.000 \\
+Intracalcarine Cortex & 0.020 & 0.035 & 0.084 & +0.000 & 1.000 & 1.000 \\
+Middle Frontal Gyrus & 0.045 & 0.045 & 0.098 & +0.007 & 1.000 & 1.000 \\
+Precentral Gyrus & 0.092 & 0.045 & 0.098 & +0.015 & 1.000 & 1.000 \\
+Frontal Orbital Cortex & 0.029 & 0.055 & 0.109 & +0.002 & 1.000 & 1.000 \\
+Temporal Occipital Fusiform Cortex & 0.021 & 0.055 & 0.109 & +0.005 & 0.945 & 1.000 \\
+Middle Temporal Gyrus, posterior division & 0.024 & 0.060 & 0.115 & +0.007 & 0.995 & 1.000 \\
+Lateral Occipital Cortex, inferior division & 0.034 & 0.065 & 0.119 & +0.000 & 1.000 & 1.000 \\
+Inferior Frontal Gyrus, pars triangularis & 0.017 & 0.070 & 0.124 & +0.002 & 0.980 & 1.000 \\
+Temporal Pole & 0.041 & 0.075 & 0.128 & +0.006 & 1.000 & 1.000 \\
+Lateral Occipital Cortex, superior division & 0.064 & 0.080 & 0.132 & +0.010 & 1.000 & 1.000 \\
+Superior Temporal Gyrus, anterior division & 0.012 & 0.090 & 0.143 & +0.000 & 0.990 & 1.000 \\
+Postcentral Gyrus & 0.045 & 0.109 & 0.169 & +0.006 & 1.000 & 1.000 \\
+Superior Frontal Gyrus & 0.036 & 0.129 & 0.188 & +0.011 & 1.000 & 1.000 \\
+Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex) & 0.015 & 0.129 & 0.188 & +0.000 & 1.000 & 1.000 \\
+Supramarginal Gyrus, anterior division & 0.016 & 0.134 & 0.190 & +0.000 & 1.000 & 1.000 \\
+Middle Temporal Gyrus, temporooccipital part & 0.016 & 0.179 & 0.246 & +0.000 & 1.000 & 1.000 \\
+Heschl's Gyrus (includes H1 and H2) & 0.009 & 0.199 & 0.265 & +0.000 & 1.000 & 1.000 \\
+Superior Parietal Lobule & 0.015 & 0.274 & 0.355 & +0.001 & 1.000 & 1.000 \\
+Middle Temporal Gyrus, anterior division & 0.009 & 0.289 & 0.364 & -0.000 & 0.980 & 1.000 \\
+Frontal Pole & 0.044 & 0.338 & 0.416 & +0.018 & 1.000 & 1.000 \\
+Planum Polare & 0.008 & 0.393 & 0.472 & +0.000 & 0.995 & 1.000 \\
+Occipital Pole & 0.016 & 0.408 & 0.478 & +0.002 & 1.000 & 1.000 \\
+Inferior Frontal Gyrus, pars opercularis & 0.010 & 0.433 & 0.489 & +0.001 & 0.990 & 1.000 \\
+Temporal Fusiform Cortex, anterior division & 0.006 & 0.438 & 0.489 & +0.000 & 0.990 & 1.000 \\
+Precuneous Cortex & 0.012 & 0.507 & 0.554 & +0.003 & 1.000 & 1.000 \\
+Angular Gyrus & 0.007 & 0.537 & 0.573 & -0.000 & 1.000 & 1.000 \\
+Cuneal Cortex & 0.006 & 0.562 & 0.587 & +0.000 & 1.000 & 1.000 \\
+Inferior Temporal Gyrus, anterior division & 0.003 & 0.622 & 0.635 & +0.001 & 0.945 & 1.000 \\
+Supracalcarine Cortex & 0.000 & 0.945 & 0.945 & +0.000 & 0.960 & 1.000 \\
+\end{longtable}
+
+\vspace{1em}
+\begin{longtable}{>{\raggedright\arraybackslash}p{6.4cm}rrrrrr}
+\caption{Full region-masking results under the sensitivity null (500 contiguous draws).}\label{tab:fullsen}\\
+\toprule
+& \multicolumn{3}{c}{Zero fill} & \multicolumn{3}{c}{Mean fill} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Region & Effect & Raw $p$ & FDR $p$ & Effect & Raw $p$ & FDR $p$ \\
+\midrule
+\endfirsthead
+\toprule
+& \multicolumn{3}{c}{Zero fill} & \multicolumn{3}{c}{Mean fill} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+Region & Effect & Raw $p$ & FDR $p$ & Effect & Raw $p$ & FDR $p$ \\
+\midrule
+\endhead
+\midrule
+\multicolumn{7}{r}{\emph{continued on next page}}\\
+\endfoot
+\bottomrule
+\endlastfoot
+Insular Cortex & 0.081 & 0.445 & 0.726 & -0.000 & 0.972 & 0.996 \\
+Inferior Temporal Gyrus, temporooccipital part & 0.063 & 0.076 & 0.524 & +0.002 & 0.497 & 0.996 \\
+Subcallosal Cortex & 0.039 & 0.152 & 0.524 & +0.001 & 0.581 & 0.996 \\
+Cingulate Gyrus, anterior division & 0.059 & 0.058 & 0.524 & +0.001 & 0.830 & 0.996 \\
+Cingulate Gyrus, posterior division & 0.057 & 0.112 & 0.524 & +0.000 & 0.876 & 0.996 \\
+Parahippocampal Gyrus, anterior division & 0.057 & 0.345 & 0.686 & +0.001 & 0.786 & 0.996 \\
+Parahippocampal Gyrus, posterior division & 0.069 & 0.182 & 0.524 & +0.001 & 0.679 & 0.996 \\
+Lingual Gyrus & 0.257 & 0.002 & 0.096 & +0.001 & 0.912 & 0.996 \\
+Temporal Fusiform Cortex, posterior division & 0.111 & 0.242 & 0.635 & +0.001 & 0.898 & 0.996 \\
+Occipital Fusiform Gyrus & 0.053 & 0.186 & 0.524 & +0.002 & 0.571 & 0.996 \\
+Frontal Operculum Cortex & 0.035 & 0.158 & 0.524 & +0.000 & 0.778 & 0.996 \\
+Central Opercular Cortex & 0.044 & 0.112 & 0.524 & -0.000 & 0.950 & 0.996 \\
+Parietal Operculum Cortex & 0.043 & 0.024 & 0.524 & +0.001 & 0.741 & 0.996 \\
+Planum Temporale & 0.025 & 0.086 & 0.524 & +0.000 & 0.956 & 0.996 \\
+Supramarginal Gyrus, posterior division & 0.029 & 0.178 & 0.524 & -0.000 & 0.972 & 0.996 \\
+Frontal Medial Cortex & 0.019 & 0.092 & 0.524 & +0.001 & 0.752 & 0.996 \\
+Inferior Temporal Gyrus, posterior division & 0.028 & 0.357 & 0.686 & +0.004 & 0.425 & 0.996 \\
+Superior Temporal Gyrus, posterior division & 0.019 & 0.094 & 0.524 & +0.000 & 0.956 & 0.996 \\
+Paracingulate Gyrus & 0.035 & 0.152 & 0.524 & +0.000 & 0.952 & 0.996 \\
+Intracalcarine Cortex & 0.020 & 0.485 & 0.728 & +0.000 & 0.934 & 0.996 \\
+Middle Frontal Gyrus & 0.045 & 0.160 & 0.524 & +0.007 & 0.248 & 0.996 \\
+Precentral Gyrus & 0.092 & 0.772 & 0.843 & +0.015 & 0.186 & 0.996 \\
+Frontal Orbital Cortex & 0.029 & 0.469 & 0.726 & +0.002 & 0.882 & 0.996 \\
+Temporal Occipital Fusiform Cortex & 0.021 & 0.501 & 0.729 & +0.005 & 0.295 & 0.996 \\
+Middle Temporal Gyrus, posterior division & 0.024 & 0.289 & 0.662 & +0.007 & 0.218 & 0.996 \\
+Lateral Occipital Cortex, inferior division & 0.034 & 0.373 & 0.689 & +0.000 & 0.974 & 0.996 \\
+Inferior Frontal Gyrus, pars triangularis & 0.017 & 0.265 & 0.637 & +0.002 & 0.593 & 0.996 \\
+Temporal Pole & 0.041 & 0.463 & 0.726 & +0.006 & 0.623 & 0.996 \\
+Lateral Occipital Cortex, superior division & 0.064 & 0.571 & 0.756 & +0.010 & 0.271 & 0.996 \\
+Superior Temporal Gyrus, anterior division & 0.012 & 0.327 & 0.683 & +0.000 & 0.894 & 0.996 \\
+Postcentral Gyrus & 0.045 & 0.711 & 0.837 & +0.006 & 0.411 & 0.996 \\
+Superior Frontal Gyrus & 0.036 & 0.251 & 0.635 & +0.011 & 0.206 & 0.996 \\
+Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex) & 0.015 & 0.465 & 0.726 & +0.000 & 0.894 & 0.996 \\
+Supramarginal Gyrus, anterior division & 0.016 & 0.309 & 0.675 & +0.000 & 0.960 & 0.996 \\
+Middle Temporal Gyrus, temporooccipital part & 0.016 & 0.561 & 0.756 & +0.000 & 0.996 & 0.996 \\
+Heschl's Gyrus (includes H1 and H2) & 0.009 & 0.463 & 0.726 & +0.000 & 0.888 & 0.996 \\
+Superior Parietal Lobule & 0.015 & 0.758 & 0.843 & +0.001 & 0.790 & 0.996 \\
+Middle Temporal Gyrus, anterior division & 0.009 & 0.579 & 0.756 & -0.000 & 0.886 & 0.996 \\
+Frontal Pole & 0.044 & 0.112 & 0.524 & +0.018 & 0.890 & 0.996 \\
+Planum Polare & 0.008 & 0.583 & 0.756 & +0.000 & 0.834 & 0.996 \\
+Occipital Pole & 0.016 & 0.715 & 0.837 & +0.002 & 0.669 & 0.996 \\
+Inferior Frontal Gyrus, pars opercularis & 0.010 & 0.615 & 0.777 & +0.001 & 0.743 & 0.996 \\
+Temporal Fusiform Cortex, anterior division & 0.006 & 0.890 & 0.909 & +0.000 & 0.890 & 0.996 \\
+Precuneous Cortex & 0.012 & 0.745 & 0.843 & +0.003 & 0.671 & 0.996 \\
+Angular Gyrus & 0.007 & 0.715 & 0.837 & -0.000 & 0.994 & 0.996 \\
+Cuneal Cortex & 0.006 & 0.810 & 0.864 & +0.000 & 0.918 & 0.996 \\
+Inferior Temporal Gyrus, anterior division & 0.003 & 0.876 & 0.909 & +0.001 & 0.735 & 0.996 \\
+Supracalcarine Cortex & 0.000 & 0.990 & 0.990 & +0.000 & 0.749 & 0.996 \\
+\end{longtable}
+
+}
+
+
+\section{Faithfulness under three fills, with confidence intervals}
+\label{app:fills}
+95\% bootstrap intervals by child (10{,}000 resamples). Paired insertion difference, ReX minus Guided Backprop,
+per fill: zero fill +0.013 [-0.046, +0.072];
+mean fill -0.195 [-0.265, -0.126];
+blur fill -0.370 [-0.429, -0.311].
+Machine-readable: \texttt{results\_}\allowbreak\texttt{revised\_null/faithfulness\_ci\_by\_fill.csv}.
+
+\begin{table}[H]
+\centering
+\caption{Deletion and insertion AUC with 95\% bootstrap CIs by child, per fill.}
+\label{tab:fillsci}
+\small
+\begin{tabular}{llcc}
+\toprule
+Fill & Method & Deletion AUC [95\% CI] & Insertion AUC [95\% CI] \\
+\midrule
+Zero & M1 Grad-CAM (final) & 0.644 [0.601, 0.687] & 0.501 [0.471, 0.532] \\
+Zero & M2 Grad-CAM (early) & 0.777 [0.729, 0.822] & 0.488 [0.477, 0.499] \\
+Zero & M3 Saliency & 0.567 [0.517, 0.619] & 0.490 [0.438, 0.543] \\
+Zero & M4 Integrated Gradients & 0.528 [0.475, 0.584] & 0.513 [0.479, 0.548] \\
+Zero & M5 SmoothGrad & 0.556 [0.503, 0.609] & 0.538 [0.486, 0.589] \\
+Zero & M6 VarGrad & 0.580 [0.531, 0.628] & 0.501 [0.440, 0.560] \\
+Zero & M7 LRP & 0.674 [0.627, 0.720] & 0.598 [0.529, 0.665] \\
+Zero & M8 Guided Backprop & 0.556 [0.489, 0.624] & 0.742 [0.701, 0.780] \\
+Zero & M9 ReX & 0.141 [0.119, 0.165] & 0.755 [0.713, 0.793] \\
+Zero & Random order & 0.592 [0.555, 0.630] & 0.429 [0.368, 0.493] \\
+\midrule
+Mean & M1 Grad-CAM (final) & 0.737 [0.685, 0.787] & 0.541 [0.475, 0.607] \\
+Mean & M2 Grad-CAM (early) & 0.788 [0.744, 0.830] & 0.462 [0.389, 0.532] \\
+Mean & M3 Saliency & 0.708 [0.632, 0.782] & 0.458 [0.376, 0.540] \\
+Mean & M4 Integrated Gradients & 0.604 [0.521, 0.685] & 0.500 [0.404, 0.589] \\
+Mean & M5 SmoothGrad & 0.665 [0.596, 0.732] & 0.488 [0.399, 0.575] \\
+Mean & M6 VarGrad & 0.710 [0.644, 0.773] & 0.497 [0.409, 0.585] \\
+Mean & M7 LRP & 0.789 [0.725, 0.851] & 0.527 [0.446, 0.606] \\
+Mean & M8 Guided Backprop & 0.818 [0.769, 0.866] & 0.490 [0.397, 0.581] \\
+Mean & M9 ReX & 0.877 [0.838, 0.912] & 0.295 [0.236, 0.357] \\
+Mean & Random order & 0.680 [0.596, 0.763] & 0.500 [0.401, 0.589] \\
+\midrule
+Blur & M1 Grad-CAM (final) & 0.860 [0.824, 0.893] & 0.614 [0.544, 0.681] \\
+Blur & M2 Grad-CAM (early) & 0.952 [0.940, 0.963] & 0.562 [0.481, 0.644] \\
+Blur & M3 Saliency & 0.800 [0.748, 0.849] & 0.690 [0.631, 0.747] \\
+Blur & M4 Integrated Gradients & 0.861 [0.823, 0.896] & 0.605 [0.532, 0.676] \\
+Blur & M5 SmoothGrad & 0.794 [0.740, 0.844] & 0.677 [0.614, 0.739] \\
+Blur & M6 VarGrad & 0.821 [0.775, 0.864] & 0.638 [0.569, 0.705] \\
+Blur & M7 LRP & 0.861 [0.821, 0.898] & 0.602 [0.533, 0.669] \\
+Blur & M8 Guided Backprop & 0.753 [0.697, 0.807] & 0.882 [0.853, 0.909] \\
+Blur & M9 ReX & 0.845 [0.796, 0.891] & 0.512 [0.438, 0.587] \\
+Blur & Random order & 0.948 [0.935, 0.959] & 0.573 [0.489, 0.657] \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Cross-method agreement matrix}
+\label{app:agree}
+Pairwise region-level Spearman correlation between the nine methods (48 regions; each cell is the correlation between
+two methods' region-score vectors). Values are as reported in the agreement analysis, to two decimals.
+The mean over the 36 off-diagonal pairs (upper triangle) is 0.36.
+
+\begin{table}[H]
+\centering
+\small
+\caption{Pairwise cross-method agreement (Spearman, region level).}
+\label{tab:agree}
+\begin{tabular}{l*{9}{r}}
+\toprule
+& M1 & M2 & M3 & M4 & M5 & M6 & M7 & M8 & M9 \\
+\midrule
+M1 & 1.00 & -0.61 & +0.37 & +0.34 & +0.28 & +0.21 & +0.10 & +0.47 & +0.56 \\
+M2 & -0.61 & 1.00 & -0.21 & -0.36 & -0.20 & -0.17 & -0.21 & -0.15 & -0.54 \\
+M3 & +0.37 & -0.21 & 1.00 & +0.70 & +0.95 & +0.86 & +0.62 & +0.74 & +0.63 \\
+M4 & +0.34 & -0.36 & +0.70 & 1.00 & +0.80 & +0.85 & +0.53 & +0.63 & +0.40 \\
+M5 & +0.28 & -0.20 & +0.95 & +0.80 & 1.00 & +0.96 & +0.57 & +0.76 & +0.50 \\
+M6 & +0.21 & -0.17 & +0.86 & +0.85 & +0.96 & 1.00 & +0.52 & +0.77 & +0.39 \\
+M7 & +0.10 & -0.21 & +0.62 & +0.53 & +0.57 & +0.52 & 1.00 & +0.31 & +0.34 \\
+M8 & +0.47 & -0.15 & +0.74 & +0.63 & +0.76 & +0.77 & +0.31 & 1.00 & +0.35 \\
+M9 & +0.56 & -0.54 & +0.63 & +0.40 & +0.50 & +0.39 & +0.34 & +0.35 & 1.00 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}

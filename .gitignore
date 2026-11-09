@@ -45,3 +45,7 @@ kaggle_output_prenatal_xai_96/
 # Working backups / scratch notebooks (not for publication)
 *.sexbak
 full_with_preprocessing_prenatal-xai-smoke_to_be_used_and then_delelted _to run in kaggle.ipynb
+
+# Credentials and local handoff notes (never committed)
+kaggle.json
+SESSION_HANDOFF_DELETE_ME.md

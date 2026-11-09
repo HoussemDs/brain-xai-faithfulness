@@ -1,0 +1,4 @@
+fill,deletion_auc,del_ci_lo,del_ci_hi,insertion_auc,ins_ci_lo,ins_ci_hi
+zero,0.592,0.555,0.63,0.429,0.368,0.493
+mean,0.68,0.596,0.763,0.5,0.401,0.589
+blur,0.948,0.935,0.959,0.573,0.489,0.657

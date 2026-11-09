@@ -130,3 +130,44 @@ Same test scans and trained SFCN for all. IDs match `code/run_all_methods.py`.
 | D12 | Head: age-group classifier (2 outputs), replacing the paper's alcohol-exposure head, which cannot be reproduced without the labels | Decided |
 
 Open items before the first attribution run: none for the data.
+## 9. Amendments after the first run (2026-11-08, exploratory)
+
+The sections above are the registered protocol and are left unchanged. The changes below were made
+after the first full run and are reported as exploratory deviations in the paper (Section "Deviations
+and exploratory analyses").
+
+| ID | Registered | Changed to | Why | Effect on results |
+|---|---|---|---|---|
+| A1 | Not registered as a change. The registered null (200 random same-size regions, section 7) stays the primary test. | Added a sensitivity null: 500 random regions drawn as contiguous translations of the real mask inside gray matter | Added after the first run, because every mean-fill p-value under the registered null sat near 1 and the scattered null is poorly matched to region shape | Registered null: mean fill 0 survive; zero fill (check) 15 survive, all at the p floor. Sensitivity null: 0 survive in either fill |
+| A2 | BH across all method-by-region tests (section 7) | BH recomputed per fill over the 48 regions, after merging the two Kaggle halves | The two halves were run in parallel (REGION_HALF=0 and 1); per-half correction over 24 regions is superseded | Sensitivity null, merged: zero-fill minimum FDR p = 0.096 (Lingual Gyrus) |
+| A3 | Not registered | Random-order baseline for deletion/insertion AUC | The 0.5 chance value assumed in the first draft was not measured | Deletion 0.592 (SD 0.189), insertion 0.429 (SD 0.311) |
+| A4 | Not registered | Method-to-masking Spearman (48 regions), permutation p | Tests whether any method's regions track the model's masking dependence | Every absolute rho is at most 0.19; none significant; spatially autocorrelated, so p is optimistic |
+| A5 | Insertion CI and paired test not registered | Insertion bootstrap CI by child; paired ReX minus Guided Backprop bootstrap | Insertion was reported as a mean only; the claim needed a test | Difference 0.014, CI [-0.047, 0.072], p = 0.65 |
+| A6 | Classifier permutation test (1,000) run in every run | Skipped in the masking runs (N_PERM_ACC = 0) | Compute budget; the permutation result is taken from the original run | Permutation p = 0.01 (original run) |
+
+Consequence for the registered hypotheses: H2 cannot be tested with a confirmatory result. Under the
+registered mean-fill test no region survives correction, and the 15 zero-fill survivors of the registered null
+do not survive the sensitivity null. The H1 blob counts are unchanged (Grad-CAM final about 3, early about 13, SmoothGrad
+about 19,000, Integrated Gradients about 42,000).
+
+## 10. Faithfulness under mean and blur fills (2026-11-08, exploratory, pre-run)
+
+Recorded before the run. Motivation: zero-fill deletion and insertion can measure the model's response to
+out-of-distribution blanking, not faithfulness. Two in-distribution fills are added, and zero fill is re-run in
+the same code path as a reproducibility check.
+
+| ID | Change | Definition |
+|---|---|---|
+| A7 | Faithfulness reported under three fills, not zero only | Zero: fill value 0 (as before). Mean: the scan's own mean intensity over brain voxels (voxels > 0). Blur: Gaussian blur of the same scan, sigma = 4 voxels (1 mm grid), `scipy.ndimage.gaussian_filter` with `mode="nearest"`. Deletion replaces the top-ranked voxels with the fill; insertion starts from the fill and restores the top-ranked voxels. |
+| A8 | Model reused, not retrained from scratch | Same frozen SFCN, same cached 9600-dim features, same seeded age head (CV repeats, seed 0). The rerun must reproduce the proxy metrics of the earlier run (accuracy 0.643, probe 0.635) before any faithfulness number is used. Attribution maps are recomputed (they were not saved). |
+
+Reported per fill: deletion AUC with bootstrap-by-child CI, insertion AUC with CI, the random-order baseline per fill,
+and the paired ReX minus Guided Backprop insertion difference per fill. Zero-fill numbers must match the earlier run
+within float tolerance; any mismatch is reported.
+
+**Result (run 2026-11-08/09, Kaggle `houssemeddineed/prenatal-xai-faithfulness-fills`, COMPLETE).** Head reproduced
+exactly (CV accuracy 0.6431, probe 0.6353). Zero-fill deletion matches the earlier run to within 0.001. The ranking is
+fill-dependent. Under zero fill ReX has the lowest deletion AUC (0.141). Under mean fill ReX has the highest deletion AUC
+(0.877) and the lowest insertion AUC (0.295). Under blur fill Guided Backprop leads (deletion 0.753, insertion 0.882).
+Paired ReX-minus-GB insertion difference: zero +0.014 (CI includes 0), mean -0.195 [-0.265, -0.126], blur -0.370
+[-0.429, -0.311]. Random-order deletion per fill: 0.592, 0.680, 0.948. The paper's headline was revised to match.
