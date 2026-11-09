@@ -614,15 +614,23 @@ Results are reported against the six hypotheses exactly as registered (OSF \text
 
 \subsection{Deviations and exploratory analyses}
 \label{sec:deviations}
-The following are not part of the registered hypotheses and are reported as exploratory: (i) the sensitivity null (500 contiguous draws), added after the first run, and the earlier per-fill BH correction, which was replaced by BH pooled over all 96 region-by-fill tests to match the registered scope (the masking test has no method dimension); together with the observation that the zero-fill result depends on the null model; (ii) the random-order baseline and the method-to-masking correlation analysis, both added after the first run; (iii) whether age is independently decodable from the frozen features as a possible confound (Ridge $R^2=0.11$); and (iv) fine-tuning the SFCN, which was pre-specified as out of scope and not run. Choices made after inspecting results are flagged as exploratory here.
+The following are not part of the registered hypotheses and are reported as exploratory:
+\begin{enumerate}[leftmargin=1.6em]
+\item The sensitivity null (500 contiguous draws), added after the first run. The zero-fill result depends on this choice of null model.
+\item The per-fill BH correction, replaced by BH pooled over all 96 region-by-fill tests to match the registered scope (the masking test has no method dimension).
+\item The random-order baseline and the method-to-masking correlation analysis, both added after the first run.
+\item Whether age is independently decodable from the frozen features, as a possible confound (Ridge $R^2=0.11$).
+\item Fine-tuning the SFCN, pre-specified as out of scope and not run.
+\end{enumerate}
+Choices made after inspecting results are flagged as exploratory here.
 
 \subsection{Extending the original analysis}
 \label{sec:open}
 \begin{enumerate}[leftmargin=1.6em]
-\item \textbf{Finer explanation grid.} Next step: a finer grid would let methods name smaller structures. On this backbone, Grad-CAM resolves to a few blobs on the $5\times6\times5$ grid, coarser than named structures, so this is the first extension to pursue.
-\item \textbf{Multi-region testing.} Done here: a multi-region, FDR-controlled test was run where a single region was tested before. Under the registered null, 14 regions pass under zero fill (exploratory) and none under mean fill. Under the sensitivity null, none passes. This is a different test from the original white-matter-volume $t$-test, so I draw no comparison of effect direction or magnitude with \citet{das2024}.
-\item \textbf{Site and recruitment controls.} Next step: model site and recruitment effects where scan-level site information is available. PAE scans are not public, so this remains untested here.
-\item \textbf{Age control.} Next step: control for age explicitly. Age is weakly decodable from the frozen features ($R^2=0.11$), so it is a plausible covariate to add.
+\item \textbf{Finer explanation grid.} A finer grid would let methods name smaller structures. On this backbone, Grad-CAM resolves to a few blobs on the $5\times6\times5$ grid, coarser than named structures, so this is the first extension to pursue.
+\item \textbf{Multi-region testing.} A multi-region, FDR-controlled test was run where a single region was tested before. Under the registered null, 14 regions pass under zero fill (exploratory) and none under mean fill. Under the sensitivity null, none passes. This is a different test from the original white-matter-volume $t$-test, so I draw no comparison of effect direction or magnitude with \citet{das2024}.
+\item \textbf{Site and recruitment controls.} Model site and recruitment effects where scan-level site information is available. PAE scans are not public, so this remains untested here.
+\item \textbf{Age control.} Control for age explicitly. Age is weakly decodable from the frozen features ($R^2=0.11$), so it is a plausible covariate to add.
 \item \textbf{One scan per child.} This study uses one scan per child with child-grouped cross-validation, so each child is one independent unit.
 \end{enumerate}
 
@@ -682,8 +690,7 @@ pre-specified plan, all figures, and the full per-region $p$-value log are in th
 repository: \url{https://github.com/HoussemDs/brain-xai-faithfulness}. The sensitivity masking
 analysis (merged halves, pooled FDR, method--masking correlations, region figures) is reproduced by
 \texttt{code/}\allowbreak\texttt{merge\_masking\_halves.py} from the Kaggle outputs, with results in
-\texttt{results\_}\allowbreak\texttt{revised\_null/}. The full pipeline ran on Kaggle (GPU T4~$\times$2,
-$\approx$5.8\,h).
+\texttt{results\_}\allowbreak\texttt{revised\_null/}. The faithfulness run took $\approx$5.8\,h on Kaggle (GPU T4~$\times$2); preprocessing and the null evaluations are not included in this figure.
 
 \bibliographystyle{plainnat}
 \bibliography{references}
