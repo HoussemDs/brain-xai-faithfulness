@@ -1,10 +1,12 @@
+> **Superseded.** This note is for half A (REGION_HALF=0) only, with per-half FDR over 24 regions. Use `../region_masking_merged.csv` and `results/REPORT.md` for the merged results.
+
 # Results note — XAI validation on a pediatric SFCN (public controls)
 
 **0. Headline.** Across 9 methods, sanity-check similarity ranged -0.24–0.73; mean pairwise region-level agreement was 0.36.
 
 **1. Question.** Which explanation methods are faithful, stable across methods, and anatomically valid on a frozen pretrained SFCN?
 
-**1a. Relation to Das et al. (2024).** Extends the explainability step they flagged as *preliminary* (single Grad-CAM, one region tested). Not an audit.
+**1a. Relation to Das et al. (2024).** Extends the explainability step they flagged as *preliminary* (single Grad-CAM, one region tested). It does not re-examine their work.
 
 **2. Data.** 96 children, one scan each, public Calgary Preschool controls. **Controls only, no PAE; age group is the proxy task.** Class balance (0=younger,1=older): [48, 48].
 
@@ -46,7 +48,7 @@ M4_integrated_gradients                    0.728186    FAIL (input-driven)
 - H3 (agreement): mean pairwise Spearman = 0.36.
 - H4 (sanity): worst (most input-driven) = M4_integrated_gradients (r=0.73).
 - H5 (layers): {'block2': 0.6242105263157894, 'block6': 0.6352631578947369}.
-- H6 (age confound): Ridge R2 = 0.11109150162043036.
+- Age decodability (paper Section 5.3, age-control item; not one of the six registered hypotheses): Ridge R2 = 0.11109150162043036.
 
 **10. Limitations.** n=96, single proxy task, atlas choice, no PAE data, pretrained-weights source not author-confirmed.
 

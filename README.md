@@ -1,4 +1,4 @@
-# Which explanations can we trust? A faithfulness audit of a frozen pediatric SFCN
+# Validating attribution methods for a frozen pretrained SFCN on pediatric brain MRI
 
 ![Data](https://img.shields.io/badge/data-CC--BY%204.0%20(OSF%205kz2p)-blue)
 ![Run](https://img.shields.io/badge/full%20run-complete%20(96%20children)-success)
@@ -13,7 +13,7 @@ to the model, consistent across methods, and anatomically valid under a correcte
 Follow-up to Das, Duarte, Lebel & Bento (2024), *Deep learning for detecting prenatal alcohol
 exposure in pediatric brain MRI* (Front. Comput. Neurosci. 18:1434421). The public data are
 **controls only**, so this project makes **no claim about alcohol exposure**; it uses an
-age-group proxy (the signal the frozen brain-age features actually encode) to audit the
+age-group proxy (the signal the frozen brain-age features actually encode) to validate the
 explanation methods on the exact backbone, on data anyone can download.
 
 **Paper:** [`paper/trustworthy_xai_pediatric_sfcn.pdf`](paper/trustworthy_xai_pediatric_sfcn.pdf)
@@ -34,7 +34,7 @@ why a validation step is needed before any map is read anatomically.*
 | **Consistent across methods?** | Weak: mean pairwise region-level Spearman **0.36**; the two Grad-CAM variants are anti-correlated. |
 | **Anatomically valid?** | Under the pre-registered mean-intensity test, **no cortical region survives FDR**. The zero-fill check flags 14 regions under the registered null, all at its p floor; a post-hoc sensitivity null (500 contiguous draws) finds none in either fill. Method-to-masking agreement is weak (every correlation is at most 0.19 in absolute value). |
 
-The deliverable is the **method verdict and a reusable protocol**, not a diagnostic classifier.
+The deliverable is the **method verdict and a validation template**, not a diagnostic classifier.
 The proxy head is intentionally modest (~64% CV accuracy) — accuracy is not the point.
 
 <p align="center">
@@ -49,7 +49,7 @@ reinitialized, so its map is input-driven.*
 ## What makes this a clean test
 
 - **Pre-registered protocol** (OSF `jycnr`): six hypotheses and a decision log fixed before the run; post-hoc analyses are labelled as such.
-- **One scan per child** (`n = 96`), child-grouped cross-validation — **no child-level leakage** from repeated/longitudinal scans.
+- **One scan per child** (`n = 96`), child-grouped cross-validation — the public release is longitudinal, so this study keeps one scan per child.
 - **Native-space design:** the frozen SFCN is kept in its pretraining space (UK Biobank/MNI152), so the transfer-learned features stay valid rather than being warped onto a pediatric template.
 - **Nine methods, multiple criteria:** faithfulness, randomized-weight sanity, resolution, cross-method agreement, and a multiple-comparison-corrected region-masking test.
 - **Fully public and reproducible:** public cohort, released code, pre-specified plan, and the complete per-region p-value log.

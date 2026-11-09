@@ -4,7 +4,7 @@ Sensitivity null (500 contiguous draws, post-hoc). Source: Kaggle kernels housse
 houssemeddineds/prenatal-xai-masking-fixes-b (REGION_HALF=1), and the academic-account
 houssemeddineed/prenatal-xai-faithfulness-perscan.
 
-- region_masking_merged.csv: both halves concatenated; BH-FDR recomputed per fill over all 48 regions. Authoritative.
+- region_masking_merged.csv: both halves concatenated; BH-FDR pooled over all 96 region-by-fill tests (48 regions x 2 fills). Authoritative.
 - method_vs_masking_correlation_merged.csv: Spearman of each method's region scores vs zero-fill masking effect (48 regions), permutation p (10,000).
 - region_masking_revised.png: figure used in the paper.
 - method_region_scores.csv: per-region attribution scores (identical in both halves to float precision).

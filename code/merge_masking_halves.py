@@ -1,4 +1,4 @@
-"""Merge the two region-masking halves, recompute BH-FDR over all regions per fill,
+"""Merge the two region-masking halves, recompute BH-FDR pooled over all 96 region-by-fill tests,
 recompute method-vs-masking Spearman, and draw the revised region figure.
 
 Usage:

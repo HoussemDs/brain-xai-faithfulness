@@ -41,7 +41,7 @@ task on the same frozen pretrained SFCN, and asks:
 
 Age is the signal the frozen brain-age SFCN actually encodes; a sex proxy was tested first and
 decoded at chance (plan decision D11). This **extends** the explainability step Das et al. (2024)
-flagged as preliminary (a single Grad-CAM, one region tested). It is not an audit of their work.
+flagged as preliminary (a single Grad-CAM, one region tested). It does not re-examine their work.
 
 ## 2. Data and model
 
