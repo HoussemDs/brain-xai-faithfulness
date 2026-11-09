@@ -23,9 +23,7 @@
 \setlength{\parskip}{0.4em}
 \setlength{\parindent}{0pt}
 
-\title{\textbf{Which explanations can we trust? A multi-method faithfulness,
-cross-method agreement, and anatomical-validity audit of a frozen pretrained
-SFCN on pediatric brain MRI}}
+\title{\textbf{Validating attribution methods for a frozen pretrained SFCN on pediatric brain MRI}}
 
 \author{Houssem Eddine\\[2pt]
 \small ESPRIT, Tunis, Tunisia\\
@@ -40,11 +38,11 @@ SFCN on pediatric brain MRI}}
 \begin{abstract}
 \noindent
 Explanation methods are routinely used to justify clinical claims from 3D brain-MRI
-classifiers, yet they are rarely validated before being believed. We audit nine attribution
+classifiers, yet they are rarely validated before being believed. We validate nine attribution
 methods on a frozen pretrained Simple Fully Convolutional Network (SFCN), a brain-age model,
 using an age-group proxy task on 96 children from the public Calgary Preschool control cohort.
 The study makes no claim about prenatal alcohol exposure; it asks which explanations are
-faithful to the model, agree with one another only weakly, and whether region-level claims survive
+faithful to the model, how well they agree with one another, and whether region-level claims survive
 multiple-comparison correction. Under the pre-registered mean-intensity fill, none do. The faithfulness ranking depends on the perturbation fill. Under zero fill, occlusion-based ReX has the lowest deletion AUC (0.14 vs.\ 0.53--0.78), but under in-distribution mean-intensity fill it scores worst on both deletion and insertion, and under blur fill Guided Backprop leads on insertion. Eight of nine methods passed
 a randomized-weight sanity check; Integrated Gradients did not (Spearman $r=0.73$ between
 trained and random models), indicating input-driven rather than model-driven maps. Methods
@@ -55,7 +53,7 @@ $p$-value floor. A post-hoc sensitivity analysis with a 500-draw contiguous null
 either fill, so the zero-fill result is not robust to the choice of null. Method-to-masking agreement
 was weak (Spearman $-0.04$ to $0.19$). Method choice materially changes which explanations look faithful,
 and occlusion-based faithfulness and randomized-weight sanity checks should be routine.
-The contribution is a reusable validation protocol, not a diagnostic classifier.
+The contribution is a validation template, not a diagnostic classifier.
 \end{abstract}
 
 \textbf{Keywords:} explainable AI, saliency maps, faithfulness, sanity checks, pediatric
@@ -85,7 +83,7 @@ three validation questions above on a task the public data can actually support:
 age-group proxy, which is appropriate because the frozen network is a brain-age model and
 age is the signal its features encode.
 
-Our contributions are: (i) a pre-specified, multi-method validation protocol for 3D-MRI
+Our contributions are: (i) a pre-specified, multi-method validation template for 3D-MRI
 attribution combining faithfulness, randomized-weight sanity checks, resolution, cross-method
 agreement, and a corrected anatomical region test; (ii) an empirical verdict over nine
 methods on a real neuroimaging backbone; and (iii) a public, reproducible pipeline. The
@@ -138,13 +136,12 @@ This is independent research, carried out by an author not affiliated with the o
 study, that builds on and extends the explainability step that \citet{das2024} explicitly
 flagged as preliminary. The original contribution, the frozen-SFCN transfer-learning
 approach to prenatal alcohol exposure and its clinical framing, is theirs; our contribution
-is the validation protocol applied to the same backbone on public data. It is not an audit of
+is the validation template applied to the same backbone on public data. It does not re-examine
 their clinical conclusion, which we cannot access, and every use we make of their design is
 cited as such. We
-identify five open questions about the original analysis (coarse explanation grid,
-single-region testing, site/recruitment confound, age confound, and child-level leakage from
-repeated scans), listed here and then stated and revisited one by one in
-Section~\ref{sec:open} to the extent the public data allow. The complete preregistered protocol (\href{https://osf.io/jycnr}{OSF \texttt{jycnr}}) accompanies this work in the project repository.
+outline five next steps for extending the original analysis (a finer explanation grid,
+multi-region testing, site and recruitment controls, age control, and one scan per child),
+each addressed in Section~\ref{sec:open} to the extent the public data allow. The complete preregistered protocol (\href{https://osf.io/jycnr}{OSF \texttt{jycnr}}) accompanies this work in the project repository.
 
 \section{Methods}
 
@@ -153,7 +150,7 @@ We use the public Calgary Preschool control cohort \citep{reynolds2020} (OSF for
 \texttt{5kz2p}, CC-BY 4.0), restricted to the 96 children who carry a demographic label and a
 usable T1 scan, one scan per child. The public release is longitudinal and lists multiple
 visits per child; its T1 sheet lists 279 scans for these 96 children. We take one scan per
-child, which removes child-level leakage. Cohort
+child, with child-grouped cross-validation. Cohort
 demographics are in Table~\ref{tab:cohort}. The proxy task is age dichotomized at the cohort
 median (3.64 y): 48 older (label 1), 48 younger (label 0), a perfectly balanced
 binary problem (Fig.~\ref{fig:cohort}).
@@ -185,7 +182,7 @@ who registered to a pediatric atlas and used FSL-BET + SynthStrip. Because our b
 frozen and never fine-tuned, its features are only valid on inputs drawn from the adult
 UK~Biobank/MNI152 distribution it was trained on; registering the children into a pediatric
 template would move the inputs off that distribution and invalidate the very features we are
-auditing. Keeping the model's native space is therefore the methodologically consistent choice
+examining. Keeping the model's native space is therefore the methodologically consistent choice
 for a frozen backbone. Its one cost is that an adult atlas is then applied to preschool brains
 through affine-only registration, so region-level anatomical labels are approximate; we bound
 that cost in Section~\ref{sec:limits}.
@@ -257,7 +254,7 @@ Classifier / probe & Is the proxy signal real (not noise)? & Supporting: above-c
 
 \textbf{Faithfulness (question 1).} Deletion and insertion AUC \citep{petsiuk2018} (lower
 deletion AUC is better). This is a partial-deletion curve, not a full 0--100\% sweep: we remove
-the top-ranked voxels at four fractions (5, 10, 20, 30\%) with a zero fill and integrate the
+the top-ranked voxels at four fractions (5, 10, 20, 30\%) with a zero fill (the registered check fill; the mean-intensity and blur fills were added later, Section~\ref{sec:faith}) and integrate the
 predicted-class probability over that range. We cap at 30\% because the discriminative signal
 is concentrated in the top voxels and deleting a third of the brain already drives most methods
 to chance; the AUC should be read as ``area over 5--30\% deletion,'' not the conventional
@@ -325,13 +322,14 @@ is not a scientific claim. Cross-validated accuracy was $0.643\pm0.120$ over 50 
 
 \subsection{Faithfulness}
 \label{sec:faith}
+\label{sec:faith}
 Addressing question~1 (do the highlighted voxels drive the output?), the answer depends on the
 perturbation fill (Table~\ref{tab:fills}, Appendix~\ref{app:fills}). Under zero fill, ReX (M9) has the lowest
 deletion AUC (0.141 [0.119, 0.165], against 0.53--0.78 for the rest), with a near-tie with Guided Backprop on
 insertion. This advantage is partly by construction, since ReX searches for regions whose removal changes the
 prediction and deletion scores exactly that. Zero blanking is also out of distribution, so the zero-fill ranking
 may reflect the model's response to blanking rather than faithfulness. Under the in-distribution mean-intensity
-fill, ReX has the highest deletion AUC (0.877) and the lowest insertion AUC (0.295); the paired ReX-minus-Guided-Backprop
+fill, ReX has the highest deletion AUC (0.877) and the lowest insertion AUC (0.295). Both are worse than random order here: deletion 0.877 against 0.680 (lower is better), insertion 0.295 against 0.500 (higher is better). The paired ReX-minus-Guided-Backprop
 insertion difference is $-0.195$ [$-0.265$, $-0.126$]. Under the blur fill, Guided Backprop has the lowest deletion AUC
 (0.753) and the highest insertion AUC (0.882), and the paired insertion difference is $-0.370$ [$-0.429$, $-0.311$]. Early-block
 Grad-CAM (M2) has the highest deletion AUC under zero and blur fills. We therefore make no claim that any method is
@@ -371,7 +369,7 @@ Random order (baseline) & 0.592 & 0.680 & 0.948 & 0.429 & 0.500 & 0.573 \\
 \begin{table}[H]
 \centering
 \caption{Faithfulness. Deletion AUC (lower is better) and insertion AUC (higher is better), each with 95\%
-bootstrap CI by child (10{,}000 resamples). Insertion CIs and the random-order baseline come from the
+bootstrap CI (10{,}000 resamples of the 96 children; the child, not the scan, is the resampling unit). Insertion CIs and the random-order baseline come from the
 academic-account re-run of the faithfulness stage; its insertion values differ from the first run by at most 0.001.}
 \label{tab:faith}
 \begin{tabular}{lcccc}
@@ -396,7 +394,7 @@ Random order (baseline) & 0.592 (SD 0.189) & -- & 0.429 (SD 0.311) & -- \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\linewidth]{08_faithfulness.png}
-\caption{Deletion and insertion AUC across the nine methods.}
+\caption{Deletion AUC under zero fill across the nine methods (labels M1--M9 as in Table~\ref{tab:methods}). Lower is more faithful; bars show 95\% CIs by child.}
 \label{fig:faith}
 \end{figure}
 
@@ -462,8 +460,7 @@ and ReX (M9), produce only about three to four large blobs each; in Fig.~\ref{fi
 blob counts sit near zero against a scale dominated by the voxel-level methods, which fragment
 into thousands of small blobs (SmoothGrad $\approx$19{,}000, Saliency $\approx$44{,}000). The
 near-zero bars for M1 and M9 are therefore expected, not a plotting error: coarse grid-level
-maps cannot have many blobs. This directly bears on the first open question about the original
-analysis, namely that the explanation grid is coarser than many named structures.
+maps cannot have many blobs. This bears directly on the first next step in Section~\ref{sec:open}: the explanation grid is coarser than many named structures.
 
 \begin{figure}[H]
 \centering
@@ -615,27 +612,20 @@ Results are reported against the six hypotheses exactly as registered (OSF \text
 
 \textbf{H5} (a block-6 linear probe beats a block-2 probe): \emph{not supported}; 0.635 vs.\ 0.624 is a 0.011 gap, far inside the cross-validation standard deviation ($\pm$0.12), so depth confers no measurable advantage for this proxy and the two probes should be read as tied.
 
-\textbf{H6} (age-group accuracy exceeds chance under a child-level label-permutation test): \emph{supported}; the child-level label-permutation test was run on the frozen-feature linear probe (accuracy 0.635, permutation $p=0.01$, 1{,}000 permutations), and the repeated-CV head reaches $0.643\pm0.120$. The proxy signal is usable but modest; 0.635 is the probe accuracy that the permutation test refers to, not the CV-head accuracy.
+\textbf{H6} (signal gate: age-group accuracy beats chance under a child-level label-permutation test; near chance would mean the explanations are not interpretable): \emph{supported}; the cross-validated probe predicts the older-versus-younger median split with accuracy 0.635, permutation $p=0.01$ (1{,}000 child-level permutations), and the repeated-CV head reaches $0.643\pm0.120$. Age is the proxy target here, not a confound claim; the age-confound limitation is listed separately. 0.635 is the probe accuracy the permutation test refers to, not the CV-head accuracy.
 
 \subsection{Deviations and exploratory analyses}
 \label{sec:deviations}
 The following are not part of the registered hypotheses and are reported as exploratory: (i) the sensitivity null (500 contiguous draws), added after the first run, and the earlier per-fill BH correction, which was replaced by BH pooled over all 96 region-by-fill tests to match the registered scope (the masking test has no method dimension); together with the observation that the zero-fill result depends on the null model; (ii) the random-order baseline and the method-to-masking correlation analysis, both added after the first run; (iii) whether age is independently decodable from the frozen features as a possible confound (Ridge $R^2=0.11$); and (iv) fine-tuning the SFCN, which was pre-specified as out of scope and not run. Choices made after inspecting results are flagged as exploratory here and in the project decision log.
 
-\subsection{The five open questions about the original analysis}
+\subsection{Extending the original analysis}
 \label{sec:open}
 \begin{enumerate}[leftmargin=1.6em]
-\item \textbf{Coarse explanation grid}, \emph{confirmed}: Grad-CAM resolves to a few blobs on
-the $5\times6\times5$ grid, coarser than named structures.
-\item \textbf{Single region tested}, \emph{a corrected multi-region test is feasible}: it was run.
-Under the registered null, 14 regions pass under zero fill (exploratory) and none under mean fill. Under the
-sensitivity null, none passes. This is a different test from the original white-matter-volume $t$-test, so we
-draw no comparison of effect direction or magnitude with \citet{das2024}; the point is only that a multi-region,
-FDR-controlled test can be run where a single region was.
-\item \textbf{Site/recruitment confound}, \emph{not testable}: PAE scans are not public.
-\item \textbf{Age confound}, \emph{partially testable}: age is weakly decodable from the frozen
-features ($R^2=0.11$); a plausible confound worth controlling.
-\item \textbf{Child-level leakage}, \emph{addressed by design}: one scan per child and
-child-grouped CV.
+\item \textbf{Finer explanation grid.} Next step: a finer grid would let methods name smaller structures. On this backbone, Grad-CAM resolves to a few blobs on the $5\times6\times5$ grid, coarser than named structures, so this is the first extension to pursue.
+\item \textbf{Multi-region testing.} Done here: a multi-region, FDR-controlled test was run where a single region was tested before. Under the registered null, 14 regions pass under zero fill (exploratory) and none under mean fill. Under the sensitivity null, none passes. This is a different test from the original white-matter-volume $t$-test, so we draw no comparison of effect direction or magnitude with \citet{das2024}.
+\item \textbf{Site and recruitment controls.} Next step: model site and recruitment effects where scan-level site information is available. PAE scans are not public, so this remains untested here.
+\item \textbf{Age control.} Next step: control for age explicitly. Age is weakly decodable from the frozen features ($R^2=0.11$), so it is a plausible covariate to add.
+\item \textbf{One scan per child.} This study uses one scan per child with child-grouped cross-validation, so each child is one independent unit.
 \end{enumerate}
 
 \subsection{What this means in practice}
@@ -649,11 +639,10 @@ never report a single method's regions without a corrected statistical test.
 $n=96$; a single proxy task; one cortical atlas; and no PAE data. One caution follows from the
 native-space design justified in the Methods: the adult Harvard--Oxford atlas reaches the
 preschool brains through affine-only registration, so for children aged 2.6--6.9\,y the region
-identities in Table~\ref{tab:regions} are approximate anatomical labels, and the
+identities in Tables~\ref{tab:registered} and~\ref{tab:regions} are approximate anatomical labels, and the
 anatomical-validity question is answered as ``not established'' at the resolution of the masking
 test, not for individual gyri. Age-appropriate pediatric templates and nonlinear registration would sharpen the labels
-\citep{fonov2011} but would invalidate the frozen features, so the trade-off is deliberate, not
-an oversight. The backbone weights are the
+\citep{fonov2011} but would invalidate the frozen features, so the trade-off is deliberate. The backbone weights are the
 public UK~Biobank brain-age release of \citet{peng2021} \citep{sfcnweights}; we report the
 checkpoint used rather than relying on an unverified source. The proxy head is weak
 ($\approx$64\% CV accuracy), and faithfulness and sanity verdicts are properties of the
@@ -675,7 +664,7 @@ FASD, or the original paper's clinical regions, which require the private PAE da
 \section{Conclusion}
 On a frozen pretrained SFCN, nine explanation methods gave sharply different accounts of what
 the model uses. Faithfulness rankings depended on the perturbation fill and no method was consistently most faithful; Integrated Gradients failed a basic
-sanity check; methods agreed only weakly; and region-level claims were not robust. Under the pre-registered mean-intensity test no region survived correction. The zero-fill check flagged 14 regions under the registered null, but none survived a post-hoc sensitivity null. The practical message for
+sanity check; methods agreed only weakly; and region-level claims were not robust. Under the pre-registered mean-intensity test no region survived correction. The zero-fill check flagged 14 regions under the registered null, but none survived a post-hoc sensitivity null. This rests on one frozen backbone, one head and one cohort, so the protocol is a template to reuse and test, not a settled procedure. The practical message for
 neuroimaging XAI is that attribution maps must be validated
 for faithfulness, model-dependence, and anatomical significance, before any of them is
 read as evidence about the brain.
@@ -692,7 +681,7 @@ The author declares no affiliation with the original study and no competing inte
 \sloppy
 Data: public Calgary Preschool controls (OSF fork \texttt{5kz2p}, CC-BY 4.0). Code, the
 pre-specified plan, all figures, and the full per-region $p$-value log are in the project
-repository: \url{https://github.com/HoussemDs/brain-xai-faithfulness-audit}. The sensitivity masking
+repository: \url{https://github.com/HoussemDs/brain-xai-faithfulness}. The sensitivity masking
 analysis (merged halves, pooled FDR, method--masking correlations, region figures) is reproduced by
 \texttt{code/}\allowbreak\texttt{merge\_masking\_halves.py} from the Kaggle outputs, with results in
 \texttt{results\_}\allowbreak\texttt{revised\_null/}. The full pipeline ran on Kaggle (GPU T4~$\times$2,
@@ -785,7 +774,7 @@ Superior Frontal Gyrus & 0.036 & 0.129 & 0.376 & +0.011 & 1.000 & 1.000 \\
 Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex) & 0.015 & 0.129 & 0.376 & +0.000 & 1.000 & 1.000 \\
 Supramarginal Gyrus, anterior division & 0.016 & 0.134 & 0.379 & +0.000 & 1.000 & 1.000 \\
 Middle Temporal Gyrus, temporooccipital part & 0.016 & 0.179 & 0.491 & +0.000 & 1.000 & 1.000 \\
-Heschl's Gyrus (includes H1 and H2) & 0.009 & 0.199 & 0.531 & +0.000 & 1.000 & 1.000 \\
+Heschl's Gyrus (both subdivisions) & 0.009 & 0.199 & 0.531 & +0.000 & 1.000 & 1.000 \\
 Superior Parietal Lobule & 0.015 & 0.274 & 0.710 & +0.001 & 1.000 & 1.000 \\
 Middle Temporal Gyrus, anterior division & 0.009 & 0.289 & 0.729 & -0.000 & 0.980 & 1.000 \\
 Frontal Pole & 0.044 & 0.338 & 0.833 & +0.018 & 1.000 & 1.000 \\
@@ -855,7 +844,7 @@ Superior Frontal Gyrus & 0.036 & 0.251 & 0.996 & +0.011 & 0.206 & 0.996 \\
 Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex) & 0.015 & 0.465 & 0.996 & +0.000 & 0.894 & 0.996 \\
 Supramarginal Gyrus, anterior division & 0.016 & 0.309 & 0.996 & +0.000 & 0.960 & 0.996 \\
 Middle Temporal Gyrus, temporooccipital part & 0.016 & 0.561 & 0.996 & +0.000 & 0.996 & 0.996 \\
-Heschl's Gyrus (includes H1 and H2) & 0.009 & 0.463 & 0.996 & +0.000 & 0.888 & 0.996 \\
+Heschl's Gyrus (both subdivisions) & 0.009 & 0.463 & 0.996 & +0.000 & 0.888 & 0.996 \\
 Superior Parietal Lobule & 0.015 & 0.758 & 0.996 & +0.001 & 0.790 & 0.996 \\
 Middle Temporal Gyrus, anterior division & 0.009 & 0.579 & 0.996 & -0.000 & 0.886 & 0.996 \\
 Frontal Pole & 0.044 & 0.112 & 0.990 & +0.018 & 0.890 & 0.996 \\
